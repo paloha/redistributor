@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='redistributor',
-    version='0.1',
+    version='0.2',
     author='Pavol Harar',
     author_email='pavol.harar@gmail.com',
     packages=['redistributor'],

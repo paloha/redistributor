@@ -256,6 +256,7 @@ class Redistributor(TransformerMixin):
             self._infer_cdf_ppf(x, self.prevent_same)
 
         self.fitted = True
+        return self
 
     def transform(self, x):
         """
@@ -381,14 +382,20 @@ class Redistributor(TransformerMixin):
         """
         s = np.array(list(set(x)))
         if x.size != len(s):
+
             # Find the smallest distance between two consecutive elements
-            mindist = np.abs(np.min(np.ediff1d(s)))
+            mindist = np.abs(np.min(np.ediff1d(s))) if len(s) > 1 else 1
 
             # Add tiny noise that is smaller than the smalledst distance
             tiny_noise = np.random.rand(x.size) * (mindist / self.tinity)
             x += tiny_noise
             x = np.sort(x)
-        return x
+
+            # Recursion for handling extremely rare case that there
+            # are still some elements that are not unique
+            return self._prevent_same(x)
+        else:
+            return x
 
     def _infer_cdf_ppf(self, x, prevent_same):
         """
@@ -415,7 +422,8 @@ class Redistributor(TransformerMixin):
         values_on_latice = np.sort(x[latice])
 
         # Adds tiny noise to prevent same values if necessary
-        if prevent_same: values_on_latice = self._prevent_same(values_on_latice)
+        # Leave first and last values untouched to retain bbox
+        if prevent_same: values_on_latice[1:-1] = self._prevent_same(values_on_latice[1:-1])
 
         # Normalize the latice by nubmer of samples
         # Cummulative density function must sum up to 1
@@ -562,7 +570,7 @@ class Redistributor(TransformerMixin):
         figsize : tuple (width, height), optional, default (15,2)
             Desired size of the figure.
 
-        xlmi : float, optional, default None
+        xlim : float, optional, default None
             Limit of x axis.
         """
         import matplotlib.pyplot as plt
