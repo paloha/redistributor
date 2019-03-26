@@ -47,3 +47,8 @@ For more detailed examples, take a look into the iPython notebooks.
 # License
 This project is licensed under the terms of the MIT license.
 See license.txt for details.
+
+# Acknowledgement
+This work was supported by International Mobility of Researchers (CZ.02.2.69/0.0/0.0/16027/0008371).
+![opvvv](/uploads/19903a1b9e00015faa2b61234a99b911/opvvv.jpg)
+
