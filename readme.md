@@ -1,3 +1,6 @@
+:warning: | Still under development
+:---: | :---
+
 **Redistributor** is a tool for automatic transformation of empirical data distributions. It is implemented in **Python3** as a **Scikit-learn transformer**.
 
 It allows the user to transform their data from arbitrary distribution into other arbitrary distribution. The source and target distributions can be specified exactly, if known beforehand, or can be inferred from the data. Transformation is **piece-wise smooth, monotonic, and invertible**, and can be **saved for later use** on different data assuming the same source distribution.
@@ -34,7 +37,7 @@ pip install -e .[dev]
 ```
 
 ## Compatibility
-
+...
 
 ## Dependencies
 
@@ -75,6 +78,7 @@ $$
 $$
 
 ## How to cite
+...
 
 ## License
 This project is licensed under the terms of the MIT license.
@@ -83,22 +87,3 @@ See `license.txt` for details.
 ## Acknowledgement
 This work was supported by the *International Mobility of Researchers* (program call no.: [CZ.02.2.69/0.0/0.0/16027/0008371](https://opvvv.msmt.cz/vyzva/vyzva-c-02-16-027-mezinarodni-mobilita-vyzkumnych-pracovniku.htm)).
 ![opvvv](https://gitlab.com/paloha/redistributor/uploads/19903a1b9e00015faa2b61234a99b911/opvvv.jpg)
-
-## To do list
-
-:white_check_mark: use code checker (flake8 + autopep8)
-:black_square_button: FIX fit_tranform()! Add flag inplace=False and issue a warning if x is too large and check whether fit_transform gives the same results as fit(x).transform(x)
-:black_square_button: estimation of bounding box
-:black_square_button: update docstrings to conform with the [numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) style
-:black_square_button: specify compatibility with Python versions in this readme
-:black_square_button: specify compatibility with operating systems in this readme
-:black_square_button: add citation bibtex in this readme
-:black_square_button: update urls in setup.py
-:black_square_button: update acknowledgement in this readme
-:black_square_button: use [pytest and tox](https://tox.readthedocs.io/en/latest/example/pytest.html) for testing
-:black_square_button: publish on PyPi [guide here](https://packaging.python.org/guides/distributing-packages-using-setuptools)
-:black_square_button: verify integrity of html and pdf outputs + gitlab and gitlab pages display
-:black_square_button: update example jupyter notebooks
-:black_square_button: adjust the module to allow fitting of both source and target
-:black_square_button: write down the time complexity in this readme
-:black_square_button: addjust the documentation style (+ logo, footer, etc.)
