@@ -1,4 +1,6 @@
 */__pycache__/
+/__pycache__/
+redistributor.egg-info/
 .ipynb_checkpoints
 .venv
 .aux
