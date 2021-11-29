@@ -1,11 +1,14 @@
 :warning: | Still under development
 :---: | :---
 
-**Redistributor** is a tool for automatic transformation of empirical data distributions. It is implemented in **Python3** as a **Scikit-learn transformer**.
+This repository introduces two main classes, namely **Redistributor** and **LearnedDistribution**.
 
-It allows the user to transform their data from arbitrary distribution into other arbitrary distribution. The source and target distributions can be specified exactly, if known beforehand, or can be inferred from the data. Transformation is **piece-wise smooth, monotonic, and invertible**, and can be **saved for later use** on different data assuming the same source distribution.
+**Redistributor** is a tool for automatic transformation of empirical data distributions. It is implemented as a **Scikit-learn transformer**. It allows users to transform their data from arbitrary distribution into another arbitrary distribution. The source and target distributions, if known beforehand, can be specified exactly (e.g. as a [Continuous Scipy distribution](https://docs.scipy.org/doc/scipy/reference/tutorial/stats/continuous.html#continuous-distributions-in-scipy-stats) or any other class which has `cdf` and `pdf` methods implemented), or can be inferred from the data using `LearnedDistribution` class. Transformation is **piece-wise-linear, monotonic, invertible**, and can be **saved for later use** on different data assuming the same source distribution.
 
-The empirical distribution can be inferred from a 1D array of data. To redistribute multiple slices of your data use `Redistributor_multi` class which has a **low memory footprint** and utilizes **parallel computing** to apply multiple `Redistributor` objects.
+**LearnedDistribution** is a subclass of [Scipy.stats.rv_continous](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy-stats-rv-continuous) class. It is a continuous random variable obtained by estimating the empirical distribution of a user provided array of numeric data `x`. It can be used to sample new random points from the learned distribution.
+
+
+<!-- The empirical distribution can be inferred from a 1D array of data. To redistribute multiple slices of your data use `Redistributor_multi` class which has a **low memory footprint** and utilizes **parallel computing** to apply multiple `Redistributor` objects. -->
 
 ## Installation
 
