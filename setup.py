@@ -4,7 +4,7 @@ setup(
     author='Pavol Harar',
     author_email='pavol.harar@gmail.com',
     name='redistributor',
-    version='0.2.1',
+    version='1.0.0',
     license='MIT',
     py_modules=['redistributor'],
     description='''
