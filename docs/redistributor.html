@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
 <title>redistributor API documentation</title>
-<meta name="description" content="**Redistributor** is a tool for automatic transformation of empirical data distributions. It is implemented in **Python3** as a **Scikit-learn …" />
+<meta name="description" content=":warning: | Still under development
+:---: | :--- …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -23,9 +24,24 @@
 <h1 class="title">Module <code>redistributor</code></h1>
 </header>
 <section id="section-intro">
-<p><strong>Redistributor</strong> is a tool for automatic transformation of empirical data distributions. It is implemented in <strong>Python3</strong> as a <strong>Scikit-learn transformer</strong>.</p>
-<p>It allows the user to transform their data from arbitrary distribution into other arbitrary distribution. The source and target distributions can be specified exactly, if known beforehand, or can be inferred from the data. Transformation is <strong>piece-wise smooth, monotonic, and invertible</strong>, and can be <strong>saved for later use</strong> on different data assuming the same source distribution.</p>
-<p>The empirical distribution can be inferred from a 1D array of data. To redistribute multiple slices of your data use <code><a title="redistributor.Redistributor_multi" href="#redistributor.Redistributor_multi">Redistributor_multi</a></code> class which has a <strong>low memory footprint</strong> and utilizes <strong>parallel computing</strong> to apply multiple <code><a title="redistributor.Redistributor" href="#redistributor.Redistributor">Redistributor</a></code> objects.</p>
+<table>
+<thead>
+<tr>
+<th align="center">:warning:</th>
+<th align="left">Still under development</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>This repository introduces two main classes, namely <strong>Redistributor</strong> and <strong>LearnedDistribution</strong>.</p>
+<p><strong>Redistributor</strong> is a tool for automatic transformation of empirical data distributions. It is implemented as a <strong>Scikit-learn transformer</strong>. It allows users to transform their data from arbitrary distribution into another arbitrary distribution. The source and target distributions, if known beforehand, can be specified exactly (e.g. as a <a href="https://docs.scipy.org/doc/scipy/reference/tutorial/stats/continuous.html#continuous-distributions-in-scipy-stats">Continuous Scipy distribution</a> or any other class which has <code>cdf</code> and <code>pdf</code> methods implemented), or can be inferred from the data using <code><a title="redistributor.LearnedDistribution" href="#redistributor.LearnedDistribution">LearnedDistribution</a></code> class. Transformation is <strong>piece-wise-linear, monotonic, invertible</strong>, and can be <strong>saved for later use</strong> on different data assuming the same source distribution.</p>
+<p><strong>LearnedDistribution</strong> is a subclass of <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy-stats-rv-continuous">Scipy.stats.rv_continous</a> class. It is a continuous random variable obtained by estimating the empirical distribution of a user provided array of numeric data <code>x</code>. It can be used to sample new random points from the learned distribution.</p>
+<!-- The empirical distribution can be inferred from a 1D array of data. To redistribute multiple slices of your data use <code>Redistributor\_multi</code> class which has a **low memory footprint** and utilizes **parallel computing** to apply multiple <code><a title="redistributor.Redistributor" href="#redistributor.Redistributor">Redistributor</a></code> objects. -->
 <h2 id="installation">Installation</h2>
 <table>
 <thead>
@@ -61,6 +77,7 @@ source .venv/bin/activate
 pip install -e .[dev]
 </code></pre>
 <h2 id="compatibility">Compatibility</h2>
+<p>&hellip;</p>
 <h2 id="dependencies">Dependencies</h2>
 <p>Required packages for <code><a title="redistributor.Redistributor" href="#redistributor.Redistributor">Redistributor</a></code> are specified in the <code>install_requires</code> list in the <code>setup.py</code> file.</p>
 <p>Extra dependencies for running the tests, compiling the documentation, or running the examples are specified in the <code>extras_require</code> dictionary in the same file.</p>
@@ -98,22 +115,13 @@ one can, under suitable conditions, show that
 \tilde{R} \xrightarrow[N,M\to \infty]{} R.
 </script></span></p>
 <h2 id="how-to-cite">How to cite</h2>
+<p>&hellip;</p>
 <h2 id="license">License</h2>
 <p>This project is licensed under the terms of the MIT license.
 See <code>license.txt</code> for details.</p>
 <h2 id="acknowledgement">Acknowledgement</h2>
 <p>This work was supported by the <em>International Mobility of Researchers</em> (program call no.: <a href="https://opvvv.msmt.cz/vyzva/vyzva-c-02-16-027-mezinarodni-mobilita-vyzkumnych-pracovniku.htm">CZ.02.2.69/0.0/0.0/16027/0008371</a>).
 <img alt="opvvv" src="https://gitlab.com/paloha/redistributor/uploads/19903a1b9e00015faa2b61234a99b911/opvvv.jpg"></p>
-<h2 id="to-do-list">To do list</h2>
-<p>:white_check_mark: use code checker (flake8 + autopep8)
-:black_square_button: specify compatibility with Python versions in this readme
-:black_square_button: specify compatibility with operating systems in this readme
-:black_square_button: add citation bibtex in this readme
-:black_square_button: update urls in setup.py
-:black_square_button: update acknowledgement in this readme
-:black_square_button: use <a href="https://tox.readthedocs.io/en/latest/example/pytest.html">pytest and tox</a> for testing
-:black_square_button: publish on PyPi <a href="https://packaging.python.org/guides/distributing-packages-using-setuptools">guide here</a>
-:black_square_button: verify integrity of html and pdf outputs + gitlab and gitlab pages display</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -124,12 +132,457 @@ See <code>license.txt</code> for details.</p>
 
 from __future__ import division
 
-import sys
-import itertools
-
+import warnings
 import numpy as np
-from scipy.stats import norm
+from scipy.stats import rv_continuous
+from scipy.interpolate import interp1d
 from sklearn.base import TransformerMixin
+
+
+class Redistributor(TransformerMixin):
+    &#34;&#34;&#34;
+    An algorithm for automatic transformation of data from arbitrary
+    distribution into arbitrary distribution. Source and target distributions
+    can be known beforehandand or learned from the data using
+    LearnedDistribution class. Transformation is piecewise linear, monotonic
+    and invertible.
+
+    Implemented as a Scikit-learn transformer. Can be fitted on 1D vector
+    and saved to be used later for transforming other data assuming the same
+    source distribution.
+
+    Uses source&#39;s and target&#39;s `cdf()` and `ppf()` to infer the
+    transform and inverse transform functions.
+
+    `transform_function = target_ppf(source_cdf(x))`
+    `inverse_transform = source_ppf(target_cdf(x))`
+    &#34;&#34;&#34;
+
+    def __init__(self, source, target):
+        self.source = source
+        self.target = target
+
+    def fit(x=None, y=None):
+        &#34;&#34;&#34;
+        Redistributor does not need to be fitted.
+        &#34;&#34;&#34;
+        pass
+
+    def transform(self, x):
+        &#34;&#34;&#34;
+        Transform the data from source to target distribution.
+        &#34;&#34;&#34;
+        return self.target.ppf(self.source.cdf(x))
+
+    def inverse_transform(self, x):
+        &#34;&#34;&#34;
+        Inverse transform the data from target to source distribution.
+        &#34;&#34;&#34;
+        return self.source.ppf(self.target.cdf(x))
+
+    def kstest(self, n=20):
+        &#34;&#34;&#34;
+        Performs the (one-sample or two-sample) Kolmogorov-Smirnov test.
+        &#34;&#34;&#34;
+        from scipy.stats import kstest
+        return kstest(self.source.rvs, self.target.cdf, N=n,
+                      alternative=&#39;two-sided&#39;, mode=&#39;auto&#39;)
+
+    def plot_transform_function(self, bins=1000, newfig=True, figsize=(16, 5)):
+        &#34;&#34;&#34;
+        Plotting the learned transformation from source to target.
+        &#34;&#34;&#34;
+        import matplotlib.pyplot as plt
+        x = np.linspace(*self.source._get_support(), bins)
+        t = self.transform(x)
+        if newfig:
+            plt.figure(figsize=figsize)
+        plt.title(&#39;Transform function&#39;)
+        plt.plot(x, t)
+        if newfig:
+            plt.show()
+            plt.close()
+        return
+
+
+class LearnedDistribution(rv_continuous):
+    &#34;&#34;&#34;
+        A continuous random variable obtained by estimating the empirical
+        distribution of a user provided 1D array of numeric data `x`. It
+        can be used to sample new random points from the learned distribution.
+
+        It approximates the Cumulative Distribution Function (`cdf`) and
+        Percent Point Function (`ppf`) of the underlying distribution of `x`
+        using linear interpolation on a lattice.
+
+        An approximation of the Probability Density Function (`pdf`) is
+        computed as an interpolation of the numerical derivative of the `cdf`
+        function. Please note it can oscilate a lot if `bins` is high.
+
+        The distribution is defined on a closed finite interval `[a, b]` or
+        `[xmin, xmax]` or combination thereof, depending on which bound/s
+        were specified by the user.
+
+        WARNING: It can not be used to learn discrete distributions.
+
+
+        Parameters
+        ----------
+
+        x : 1D numpy array
+            1D vector of which the distribution will be estimated.
+
+        a : numeric or None
+            Left boundary of the distribution support if known.
+            If specified, must be smaller than x.min().
+
+        b : numeric or None
+            Right boundary of the distribution support if known.
+            If specified, must be bigger than x.max().
+
+        bins : int or None
+            User specified value of bins. Min is 3, max is `x.size`.
+            If None or 0, bins are set automatically. Upper bound
+            is set to 1000 to prevent unnecessary computation.
+            Used to specify the density of the lattice. More bins
+            means higher precision but also more computation.
+
+        keep_x_unchanged : bool, default True
+            If True, the `x` array will be copied before partial sorting.
+            This will result in increased memory usage. But it will
+            not reorder the user provided array.
+
+            If False, there will not be any additional memory consumption.
+            But the user provided array `x` might change its order.
+            This might be very useful if `x` is a large array and there is
+            not enough available memory.
+
+        subsample_x : int, default None
+            Sacrifice precision for speed by first subsampling array `x`
+            with a defined integer step. Not doing `random.choice()` but rather
+            simple `slice(None, None, subsample_x)` because it is faster and
+            we assume the array is randomly ordered. Can lead to significant
+            speedups.
+
+        ravel_x : bool, default True
+            LearnedDistribution requires 1D arrays. So the `x` is by default
+            flattened to 1D using `np.ravel()`.
+
+        assume_sorted : bool, default False
+            If the user knows that `x` is sorted, setting this to True will
+            save a most of time by ommiting partial sorting the array.
+            Especially useful if the array `x` is big. E.g. 1GB of data
+            takes approx. 10s to partial sort on 5000 positions.
+            If `False` and `x` is almost sorted, it will still be faster than
+            if `x` is randomly ordered.
+
+        fill_value : None, array-like, float, 2-tuple or &#39;auto&#39;, default=&#39;auto&#39;
+            Specifies where to map the values out of the `cdf` support. See the
+            docstring of scipy.interpolate.interp1d to learn more about the
+            valid options. Additionally, this class enables the user to use
+            the default `auto` option, which sets reasonable `fill_value`
+            automatically.
+
+        bounds_error : bool or &#39;warn&#39;, default &#39;warn&#39;
+            See the docstring of class interp1d_with_warning.
+
+        dupl_method : str, one of {&#39;keep&#39;, &#39;spread&#39;, &#39;cluster&#39;, &#39;noise&#39;}
+                      default &#39;spread&#39;
+            Method of solving duplicate lattice values. Read more in
+            docstring of `make_unique()`.
+
+        name : str, default &#39;LearnedDistribution&#39;
+            The name of the instance.
+
+        seed : {None, int, `numpy.random.Generator`,
+            `numpy.random.RandomState`}, default None
+            See the docstring of scipy.stats.rv_continuous.
+            Used in `_prevent_same()` and `rvs()`.
+
+        kwargs : all other keyword arguments accepted by rv_continous.
+
+
+        Methods - TODO finish this documentation
+        -------
+
+        cdf
+        ppf
+        pdf
+        rvs
+        entropy
+        ... fill in the rest which is implemented
+        ... handle the rest which does not make sense
+        &#34;&#34;&#34;
+
+    def __init__(self, x, a=None, b=None, bins=None, keep_x_unchanged=True,
+                 subsample_x=None, ravel_x=True, assume_sorted=False,
+                 fill_value=&#39;auto&#39;, bounds_error=&#39;warn&#39;, dupl_method=&#39;spread&#39;,
+                 seed=None, name=&#39;LearnedDistribution&#39;, **kwargs):
+
+        super().__init__(name=name, seed=seed, **kwargs)
+
+        if ravel_x:
+            x = x.ravel()
+
+        # Sacrifice precision for speed
+        if isinstance(subsample_x, int):
+            if 2 &lt;= subsample_x &lt;= x.size:
+                x = x[::subsample_x]
+            else:
+                raise ValueError(&#39;Not 2 &lt;= subsample_x &lt;= x.size.&#39;)
+
+        # Handling input data and interval
+        self._validate_x(x)
+        self.xmin = x.min()
+        self.xmax = x.max()
+        self._validate_a_b(a, b)
+        self.a = a
+        self.b = b
+
+        # Arguments for interpolation
+        self.bounds_error = bounds_error
+        self.fill_value = fill_value
+
+        # Setting lattice density
+        self.bins = self._infer_bins(x.size, bins)
+
+        # Interpolating to get the empirical distribution
+        self.assume_sorted = assume_sorted
+        self.dupl_method = dupl_method
+        lattice, vals = self._get_lattice_and_vals(x, keep_x_unchanged)
+        self._cdf = self._get_cdf(lattice, vals)
+        self._ppf = self._get_ppf(lattice, vals)
+        self._pdf = self._get_pdf()
+
+    def _get_support(self, *args):
+        &#34;&#34;&#34;
+        Support of LearnedDistribution does not depend on any scipy arguments,
+        we keep args only to keep the signature unchanged.
+
+        The support depends only on whether `a` and/or `b` were specified
+        explicitely or as Nones.
+
+        `self.a` and/or `self.b` are kept stored as Nones to keep the
+        information about the object config for future reference of the user.
+
+        Returns
+        -------
+        a, b : numeric (float, or int)
+            end-points of the distribution&#39;s support.
+        &#34;&#34;&#34;
+        return self._cdf.x[0], self._cdf.x[-1]
+
+    def _get_support_ppf(self, *args):
+        &#34;&#34;&#34;
+        The support of `ppf` in scipy is always `[0,1]` so this method does not
+        exist in `rv_continuous`. In our case, the support might be shrinked if
+        any of the a, b is set to None.
+        &#34;&#34;&#34;
+        return self._ppf.x[0], self._ppf.x[-1]
+
+    def _validate_x(self, data):
+        &#34;&#34;&#34;
+        Validation of the input data.
+
+        Parameters
+        --------
+        data: numpy array of data to be validated
+        &#34;&#34;&#34;
+        if not np.issubdtype(data.dtype, np.floating):
+            raise TypeError(&#39;Input array dtype must be floating point.&#39;)
+        if np.issubdtype(data.dtype, np.float16):
+            warnings.warn((
+                &#39;Using float16 data can lead to large errors. &#39;
+                &#39;Rather use f32 or f64.&#39;))
+        if not data.ndim == 1:
+            raise ValueError(&#39;Input array must be 1D. You can use x.ravel().&#39;)
+
+    def _validate_a_b(self, a, b):
+        &#34;&#34;&#34;
+        Validation of the boundaries.
+
+        Parameters
+        --------
+        a: numeric or None
+            See the docstring of __init__().
+        b: numerc or None
+            See the docstring of __init__().
+        &#34;&#34;&#34;
+        if a is not None:
+            if not np.isfinite(a):
+                raise ValueError(f&#39;a {a} must be finite.&#39;)
+            if a &gt;= self.xmin:
+                raise ValueError(f&#39;a {a} must be &lt; than xmin {self.xmin}.&#39;)
+        if b is not None:
+            if not np.isfinite(b):
+                raise ValueError(f&#39;b {b} must be finite.&#39;)
+            if b &lt;= self.xmax:
+                raise ValueError(f&#39;b {b} must be &gt; than xmax {self.xmax}.&#39;)
+
+    def _infer_bins(self, n, bins):
+        &#34;&#34;&#34;
+        Infers and validates the number of bins.
+
+        Parameters
+        --------
+        n: int
+            Size of the data.
+
+        bins: int or None
+            See the docstring of __init__().
+        &#34;&#34;&#34;
+        if bins is None or bins == 0:
+            bins = min(n, int(5e3))
+        if bins &gt; n or bins &lt; 3:
+            raise ValueError(f&#39;Bins ({bins}) must be 2 &lt; bins &lt;= x.size&#39;)
+
+        return bins
+    
+
+    def _get_lattice_and_vals(self, x, keep_x_unchanged):
+        &#34;&#34;&#34;
+        Creating the `lattice` based on the number of `bins` and assembling the
+        corresp. `lattice_vals` from provided array `x` using partial sort.
+
+        Parameters
+        --------
+        x: 1D numpy array
+            See the docstring of __init__().
+
+        keep_x_unchanged: bool
+            See the docstring of __init__().
+
+        Returns
+        -------
+
+        lattice, 1D array of equidistant values
+            Support of ppf or range of cdf. The first value of the array will
+            be either 0 or epsilon and the last value will be either 1 or
+            1 - epsilon depending if a or b are specified or None. Size or the
+            array will range from bins to bins + 2.
+
+        lattice_vals, 1D array
+            Range of ppf or support of cdf. The first value of the array will
+            be either xmin or a and the last value will be either xmax or b
+            depending if a or b are specified or None. Size of the array will
+            be the same as of `lattice`.
+        &#34;&#34;&#34;
+
+        # Do we need expansion by a or b from Left or Right side or both?
+        L, R = self.a is not None, self.b is not None
+
+        # Indices at which we need x to be sorted considering L and R
+        indices = np.linspace(
+            0, x.size + L + R - 1, self.bins).round().astype(int)
+        indices = indices[L:-1 if R else None] - L
+
+        if not self.assume_sorted:
+            # Reorder values of x on indices as if the array was sorted
+            if keep_x_unchanged:
+                # Does not change x but uses twice the memory
+                x = np.partition(x, indices)
+            else:
+                # Does not use additional memory but alters the order of data
+                x.partition(indices)
+
+        # Get the _ppf.y (or _cdf.x) values
+        eps = 1 / (x.size + 1)  # Shrink the lattice with eps to exclude 0 or 1
+        lattice_vals = np.hstack([[self.a] * L, x[indices], [self.b] * R])
+
+        # Get the _ppf.x (or _cdf.y) values
+        lattice = np.linspace(
+            eps * (not L), 1 - eps * (not R), lattice_vals.size)
+
+        if not all(np.isfinite(lattice_vals)):
+            raise ValueError(&#39;Values of x on the lattice must be finite.&#39;)
+
+        # If necessary, make duplicate values unique and warn the user.
+        lattice_vals = make_unique(
+            lattice_vals, self.random_state, mode=self.dupl_method)
+        return lattice, lattice_vals
+
+    def _get_cdf(self, lattice, lattice_vals):
+        &#34;&#34;&#34;
+        Interpolates the lattice on lattice_vals to get the `cdf`.
+
+        Table of `fill_value` if `self.fill_value == &#39;auto&#39;` (n = x.size):
+        ------------------------------------------------------------------
+        a     | b     | cdf support | truncated to | fill_value
+        ------------------------------------------------------------------
+        None  | None  | xmin, xmax  | xmin, xmax   | 1/(n-1), (n-2)/(n-1)
+        None  | b     | xmin, b     | xmin, None   | 1/(n-1), None
+        a     | None  | a,    xmax  | None, xmax   | None, (n-2)/(n-1)
+        a     | b     | a,    b     | None, None   | None, None
+        &#34;&#34;&#34;
+
+        if self.fill_value == &#39;auto&#39;:
+            fill_value = (lattice[0] if self.a is None else None,
+                          lattice[-1] if self.b is None else None)
+        else:
+            # User defined fill_value
+            fill_value = self.fill_value
+
+        return interp1d_with_warning(
+            lattice_vals, lattice, kind=&#39;linear&#39;, assume_sorted=True,
+            bounds_error=self.bounds_error, fill_value=fill_value)
+
+    def _get_ppf(self, lattice, lattice_vals):
+        &#34;&#34;&#34;
+        Interpolates the lattice_vals on a lattice to get the `ppf`.
+        `fill_values` is set to the `xmin` and `xmax` to avoid problems
+        when generating random sample with `rvs()`. `bounds_error` is
+        set to `False` because user does not need a warning about this
+        behaviour and values `q &lt; 0` or `q &gt; 1` should not ever occur at all.
+        &#34;&#34;&#34;
+        fill_value = (lattice_vals[0], lattice_vals[-1])
+        return interp1d_with_warning(
+            lattice, lattice_vals, kind=&#39;linear&#39;, assume_sorted=True,
+            bounds_error=False, fill_value=fill_value)
+
+    def cdf(self, k):
+        # We do not need the default argument checking from scipy
+        # because we handle the invalid values differently using
+        # the class `interp1d_withwarning`. Therefore:
+        k = np.asarray(k)
+        return self._cdf(k)
+
+    def ppf(self, q):
+        # We do not need the default argument checking from scipy
+        # because we handle the invalid values differently using
+        # the class `interp1d_withwarning`. Therefore:
+        q = np.asarray(q)
+        if np.any(q &lt; 0) or np.any(q &gt; 1):
+            raise ValueError(&#39;Some values out of ppf support [0, 1].&#39;)
+        return self._ppf(q)
+
+    def _get_pdf(self):
+        &#34;&#34;&#34;
+        Interpolates a derivative of cdf to obtain the pdf.
+        &#34;&#34;&#34;
+        g = np.linspace(*self._get_support(), self.bins)
+        c = self.cdf(g)  # Evaluated cdf
+        dx = 1 / (g[1] - g[0])
+        dif = np.round(np.ediff1d(c, to_begin=c[1] - c[0]) * dx, decimals=10)
+        return interp1d_with_warning(g, dif, kind=&#39;linear&#39;, assume_sorted=True)
+
+    def _entropy(self, *args):
+        &#34;&#34;&#34;
+        Differential entropy of the learned RV.
+        &#34;&#34;&#34;
+        from scipy.special import entr
+        from scipy.integrate import simpson
+        g = np.linspace(*self._get_support(), self.bins)
+        return simpson(entr(self._pdf(g)), x=g)
+
+    def rvs(self, size, random_state=None):
+        &#34;&#34;&#34;
+        Random sample from the learned distribution.
+        &#34;&#34;&#34;
+        if random_state is None or type(random_state) is int:
+            from numpy.random import default_rng
+            random_state = default_rng(random_state)
+        return self.ppf(
+            random_state.uniform(*self._get_support_ppf(), size=size))
 
 
 def save_redistributor(d, path):
@@ -144,954 +597,296 @@ def load_redistributor(path):
     return joblib.load(path)
 
 
-def _divisors(x, returnOne=True, returnX=True):
+def plot_cdf_ppf_pdf(dist, a=None, b=None, bins=None,
+                     v=None, w=None, rows=1, cols=3, 
+                     figsize=(16, 5)):
     &#34;&#34;&#34;
-    Generates all divisors of a number. Divisors are not yielded in order.
-    By default, 1 and x are included in result.
+    Just a convinience function for visualizing the dist
+    `cdf`, `ppf` and `pdf` functions.
+    
+    Parameters
+    ----------
+    a: float
+        Start of the cdf support
+    b: float
+        End of the cdf support
+    v: float
+        Start of the ppf support
+    w: float
+        End of the ppf support
+    rows: int, 
+        Number of rows in the figure
+    cols: int, 
+        Number of cols in the figure
+    figsize: None or tuple
+        If None, no new figure is created.
+    &#34;&#34;&#34;
+    import matplotlib.pyplot as plt
+    if a is None:
+        a = dist._get_support()[0]
+    if b is None:
+        b = dist._get_support()[1]
+    if bins is None:
+        bins = dist.bins
+
+    if v is None:
+        v = dist._get_support_ppf()[0]
+    if w is None:
+        w = dist._get_support_ppf()[1]
+
+    x = np.linspace(a, b, bins)
+    y = np.linspace(v, w, bins)
+
+    if figsize is not None:
+        plt.figure(figsize=figsize)
+        plt.tight_layout()
+        
+    plt.subplot(rows, cols, 1)
+    plt.title(f&#39;{dist.name} CDF&#39;)
+    plt.plot(x, dist.cdf(x))
+    
+
+    plt.subplot(rows, cols, 2)
+    plt.title(f&#39;{dist.name} PPF&#39;)
+    plt.plot(y, dist.ppf(y))
+    
+
+    plt.subplot(rows, cols, 3)
+    plt.title(f&#39;{dist.name} PDF&#39;)
+    plt.plot(x, dist.pdf(x))
+    plt.ylim(-0.001, None)
+    
+    if figsize is not None:
+        plt.show()
+        plt.close()
+        return 
+    else:    
+        return plt
+
+
+class interp1d_with_warning(interp1d):
+    &#34;&#34;&#34;
+    By default behaves exactly as scipy.interpolate.interp1d but allows
+    the user to specify `bounds_error = &#39;warn&#39;` which overrides the
+    behaviour of `_check_bunds` to warn instead of raising an error.
 
     Parameters
-    --------
-    x: int
-        Number for which we need to find all its divisors.
-
-    returnOne: bool, optional, default True
-        Flag specifying if number 1 should be included in results.
-
-    returnX: bool, optional, default True
-        Flag specifying if the number x itself should be included in results.
-
-    Yields
-    --------
-    One int at a time, that divides x equally. No duplicates.
+    ----------
+    Accepts all the args and kwargs as scipy.interpolate.interp1d.
     &#34;&#34;&#34;
-    assert x &gt; 0, &#39;Must be positive &gt; 0&#39;
-    if x == 1:
-        if returnOne or returnX:
-            yield 1
-            return
-        else:
-            return
-    if returnOne:
-        yield 1
-    if returnX:
-        yield x
-    i = 2
-    while i * i &lt;= x:
-        if x % i == 0:
-            yield i
-            if x // i != i:
-                yield x // i
-        i += 1
+
+    def __init__(self, *args, **kwargs):
+        self.warn = False
+        bounds_error = kwargs.get(&#39;bounds_error&#39;)
+        if bounds_error == &#39;warn&#39;:
+            self.warn = True
+            bounds_error = True
+        super().__init__(*args, **kwargs)
+
+    def _check_bounds(self, x_new):
+        &#34;&#34;&#34;
+        Overriding the _check_bounds method of scipy.interpolate.interp1d
+        in order to provide a functionality of warning the user instead of
+        just throwing an error when some value is out of bounds. Even if
+        fill_value is specified a warning can be issued to let the user
+        know it was necessary to use the fill_value and from which side.
+        &#34;&#34;&#34;
+
+        below_bounds = x_new &lt; self.x[0]  # Find values which are bellow bounds
+        above_bounds = x_new &gt; self.x[-1]  # Find values which are above bounds
+
+        msg = (&#34;{} out of {} values in x_new are {} the interpolation &#34;
+               &#34;range. Read the docs of `fill_value` and `bounds_error` &#34;
+               &#34;to manage the behavior.&#34;)
+
+        if below_bounds.any():
+            if self.bounds_error:
+                m = msg.format(below_bounds.sum(), below_bounds.size, &#39;below&#39;)
+                if self.warn:
+                    m += (&#39; Mapping the invalid values to value: &#39;
+                          f&#39;{self._fill_value_below}.&#39;)
+                    warnings.warn(m)
+                else:
+                    raise ValueError(m)
+
+        if above_bounds.any():
+            if self.bounds_error:
+                m = msg.format(above_bounds.sum(), above_bounds.size, &#39;above&#39;)
+                if self.warn:
+                    m += (&#39; Mapping the invalid values to value: &#39;
+                          f&#39;{self._fill_value_above}.&#39;)
+                    warnings.warn(m)
+                else:
+                    raise ValueError(m)
+
+        return below_bounds, above_bounds
 
 
-class Redistributor(TransformerMixin):
+def make_unique(array, random_state, mode=&#39;spread&#39;, duplicates=None):
     &#34;&#34;&#34;
-    An algorithm for automatic transformation of data from arbitrary
-    distribution into arbitrary distribution. Source distribution
-    can be known beforehandand or learned from the data. Transformation
-    is piecewise smooth, monotonic and invertible.
+    Takes a sorted array and adjusts the duplicate values such that all
+    elements of the array are unique. The adjustment is done by linearly
+    separating the duplicates. Read more in docsting of `_get_intervals`.
 
-    Implemented as a Scikit-learn transformer. Can be fitted on 1D vector
-    (for more dimensions use Redistributor_multi wrapper) and saved to be used
-    later for transforming other data assuming the same source distribution.
+    In case `mode=&#39;keep&#39;` this function does nothing and returns the array.
 
-    Uses source&#39;s and target&#39;s cdf() and ppf() to infer the
-    transform and inverse transform functions.
+    Supports two deterministic modes &#39;spread&#39; and &#39;cluster&#39;. These two
+    define onto how large interval the valueas are spread. If &#39;cluster&#39;
+    is not possible &#39;spread&#39; is used implicitly.
 
-    transform_function = target_ppf(source_cdf(x))
-    inverse_transform = source_ppf(target_cdf(x))
+    In case there are too many duplicates (&gt;5e3), first uses addition of
+    random noise to non-min and non-max values and then continues with the
+    deterministic method.
 
-    Time complexity
-    --------
-    This algorithm can scale to a large number of samples &gt; 1e08.
-    Algorithm can be sped up by:
-    1. Turning off input data validation by setting validate_input=False
-    2. Choosing target distribution with fast cdf and ppf functions.
-    3. Specifying the source distribution if it is known.
+    Keeps the min, max, and unique values unchanged.
+    If the first iteration did not make all elements unique, repeats until
+    failure and warns the user (should be rare).
+
 
     Parameters
+    ----------
+    array: 1D numpy array
+        Sorted array with potential of having non-unique elements.
+
+    random_state: RandomState
+
+    mode: str, one of {&#39;keep&#39;, &#39;spread&#39;, &#39;cluster&#39;, &#39;noise&#39;}
+        Cluster adjusts the values by a tiny amount only.
+        Spread uses all available space between consecutive vals.
+
+    duplicates: int, number of duplicates in previous iteration.
+        Do not use, used only for recursion.
+
+
+    Returns
     --------
-    target: obj, optional, default scipy.stats.norm(loc=0, scale=1)
-        Class specifying the target distribution. Must implement
-        cdf(), ppf() and ideally pdf() methods.
-        Continuous distributions from scipy.stats can be used.
-
-    known_distribution: obj, optional, default None
-        Object specifying the source distribution when known.
-        Must implement cdf(), ppf() and ideally pdf() methods.
-        Continuous distributions from scipy.stats can be used.
-
-    bbox: tuple, optional, default None
-        Tuple (a, b) which represent the lower and upper boundary
-        of the source distribution&#39;s domain.
-
-    closed_interval: bool, optional, default True
-        If True, the values set in bounding box are included into
-        the interpolation range.
-
-    prevent_same: bool, optional, default True
-        Flag, specifyig whether to prevent same values in the
-        interpolated vector.
-
-    tinity: int, default 1e06
-        Specifies divisor of noise added to vectors with same elements.
-        Bigger the tinity, smaller the noise.
-
-    validate_input: bool, optional, default True
-        Flag specifying if the input data should be validated.
-        Turn off to save computation time. Output is undefined
-        if the data are not valid.
-
-    bins: int, optional, default 0
-        Number of bins which are used to infer the latice density
-        when the distribution is learned. Irelevant with known_distribution.
-
-        If bins = x.size, then latice density = 100%. The interpolation step =
-        x.size // bins = 1. This is most precise. If x.size is big enough,
-        we can lower the latice density and the fit will remain very precise.
-
-        If bins = 0, it is set automatically. The latice density = 100%
-        is then used up to x.size = 5000. If x.size &gt; 5000, bins = 5000.
-
-    Attributes
-    --------
-    self.target_cdf: callable, default scipy.stats.norm(loc=0, scale=1).cdf
-        Cummulative Density Function of target distribution.
-
-    self.target_ppf: callable, default scipy.stats.norm(loc=0, scale=1).ppf
-        Percent Point Function (inverse of cdf) of target distribution.
-
-    self.source_cdf: callable, default None
-        Either known_distribution.cdf function of source distribution
-        or learned on fit() by interpolation on latice.
-
-    self.source_ppf: callable, default None
-        Either known_distribution.ppf function of source distribution
-        or learned on fit() by interpolation on latice.
-
-    self.a: float, default None
-        Beginning of the interval of the source distribution domain.
-
-    self.b: float, default None
-        End of the interval of the source distribution domain.
-
-    self.n: int, default None
-        Size of the training data extened by bounding box borders if necessary.
-
-    self.fitted: bool, default False
-        Flag that specifies whether the fit() was already called.
-
-    Limitations
-    --------
-    - Output is undefined when most of the data points have the exact
-      same value, therefore data should not be sparse - multiple zeros etc.
-      Handles small amounts of the exact same values by adding tiny noise.
-
-    - Plotting of learned pdf() is just a smoothed approximation obtained
-      by 1st derivative of the learned piece-wise smooth cdf() and it
-      serves only as a visual aid.
-
-    Examples
-    --------
-    TODO
-
+    Sorted array of unique elements on the orignal interval.
     &#34;&#34;&#34;
 
-    def __init__(self,
-                 target=norm(loc=0, scale=1),
-                 known_distribution=None,
-                 bbox=None,
-                 closed_interval=True,
-                 prevent_same=True,
-                 tinity=int(1e06),
-                 validate_input=True,
-                 bins=0):
+    if mode == &#39;keep&#39;:
+        return array
 
-        self.known_distribution = known_distribution
-        self.bbox = bbox
-        self.closed_interval = closed_interval
-        self.prevent_same = prevent_same
-        self.tinity = tinity
-        self.validate_input = validate_input
-
-        self.bins = bins  # Might chang on fit()
-        self.target_cdf = target.cdf
-        self.target_ppf = target.ppf
-
-        # Will be computed or changed on fit()
-        self.source_cdf = None
-        self.source_ppf = None
-        self.a = None
-        self.b = None
-        self.n = None
-        self.fitted = False
-
-        if self.known_distribution is not None:
-            self.fit()
-
-    def fit(self, x=None):
+    def _get_intervals(array, diff):
         &#34;&#34;&#34;
-        Calls all necessary methods to infer cdf and ppf of the source
-        distribution. Source distribution can be either specified directly by
-        its function or learned from the training data on a closed or opened
-        interval. Learning approximates the cdf and ppf by interpolating on a
-        latice which density is infered from bins.
-
-        Parameters
-        --------
-
-        x: 1D numpy array, optional, default None
-            Training data from which the source distribution is learned.
-            Must be specified if self.known_distribution is None.
-        &#34;&#34;&#34;
-
-        if self.known_distribution is not None:
-            assert self.bbox is not None, \
-                &#39;Bounding box must be specified when using known_distrubition.&#39;
-            self._infer_a_b(x, self.bbox)
-            try:
-                self.source_cdf = self.known_distribution.cdf
-                self.source_ppf = self.known_distribution.ppf
-            except AttributeError:
-                print(&#39;&#39;&#39;Class known_distribution must implement cdf(), ppf()
-                and ideally pdf() methods.&#39;&#39;&#39;, file=sys.stderr)
-                raise
-            try:
-                self.source_pdf = self.known_distribution.pdf
-            except AttributeError:
-                self.source_pdf = None
-            self.known_distribution = self.known_distribution
-        else:
-            assert x is not None, \
-                &#39;If known_distribution is None, X must be specified.&#39;
-
-            # Calculate bounding box
-            self._infer_a_b(x, self.bbox)
-
-            # Validate input data
-            if self.validate_input:
-                self._validate_input(x)
-
-            # Compute number of bins to use
-            self._infer_nbins(x.size, self.bins)
-
-            # Ensure, that a and b values are in x
-            x = self._enforce_borders(x, self.closed_interval)
-
-            # Get the size of x with borders a and b
-            self.n = x.size
-
-            # Learn the source distribution
-            self._infer_cdf_ppf(x, self.prevent_same)
-
-        self.fitted = True
-        return self
-
-    def transform(self, x):
-        &#34;&#34;&#34;
-        Applies learned transformation function to the data x.
-
-        Parameters
-        --------
-        x : numpy array
-            Data to transform. Must be within self.a, self.b interval.
+        Iterates over the diff of the array, when it finds a duplicate
+        value (i.e., when diff == 0), it adds it to the result dict and
+        finds the interval onto which the duplicates can be spread such
+        that the value does not jump over previous/next value or it&#39;s
+        intrval. If two duplicate values are right after each other, they
+        share the interval between them based on number of duplicates each
+        of tham has. Note that with array [2, 2] the number of duplicates
+        of the value 2 is counted as 1. The other is original.
 
         Returns
-        --------
-        Numpy array of transformed data.
+        -------
+        dict {value: [n: int, n of val duplicates,
+                      i: int, first index of duplicate value,
+                      j: int, last index of duplicate value,
+                      a: int, start of safe interval,
+                      b: int, end of safe interval]}
+
+        Example
+        -------
+
+        array = [0,0,1,3,4,6,6,6,7,7,9,9]
+        diff  = [0,1,2,1,2,0,0,1,0,2,0,9]
+        r = {
+            0: [1, 0, 1, 0, 1],
+            6: [2, 5, 7, 4, 6.666666666666667],
+            7: [1, 8, 9, 6.666666666666667, 7.923076923076923],
+            9: [1, 10, 11, 7.923076923076923, 9]}
         &#34;&#34;&#34;
-
-        if self.validate_input:
-            self._validate_input(x)
-        return self.target_ppf(self.source_cdf(x))
-
-    def inverse_transform(self, x):
-        &#34;&#34;&#34;
-        Applies learned inverse transform function to the data x.
-
-        Parameters
-        --------
-        x : numpy array
-            Data to inverse transform. Must be within the interp. interval.
-            of learned transform function.
-
-        Returns
-        --------
-        Numpy array of inverse transformed data.
-        &#34;&#34;&#34;
-
-        return self.source_ppf(self.target_cdf(x))
-
-    def _validate_input(self, data):
-        &#34;&#34;&#34;
-        Validation of the input data used to validate inputs to fit() and
-        transform(). Can be turned off globally by setting
-        self.validate_input = False.
-
-        Parameters
-        --------
-        data: numpy array of data to be validated
-        &#34;&#34;&#34;
-        assert data.dtype == np.float64 or data.dtype == np.float32, \
-            &#39;Data must be float64 of 32.&#39;
-        assert data.ndim == 1, \
-            &#39;Data must be stored in 1D numpy array. You can use data.ravel().&#39;
-        assert all(np.isfinite(data)), \
-            &#39;Data must not contain np.nan or np.inf.&#39;
-        assert self.a &lt;= np.min(data) and np.max(data) &lt;= self.b, \
-            &#39;Data out of interval set by bbox.&#39;
-
-    def _infer_a_b(self, data, bbox):
-        &#34;&#34;&#34;
-        Infers self.a and self.b which represent the lower and upper boundary
-        of the source distribution&#39;s domain.
-
-        Parameters
-        --------
-        data: numpy array or None
-            Training data used to infer the a and b automaticaly by taking min
-            and max. Can&#39;t be None if the bbox is None.
-
-        bbox: tuple or None
-            Tuple (a, b) which represent the lower and upper boundary
-            of the source distribution&#39;s domain.
-        &#34;&#34;&#34;
-
-        if bbox is None:
-            bbox = (np.min(data), np.max(data))
-        assert len(bbox) == 2, \
-            &#39;Please specify just two values in bbox.&#39;
-        assert bbox[0] &lt; bbox[1], \
-            &#39;First element of bbox must be smaller than the second.&#39;
-        self.a = bbox[0]
-        self.b = bbox[1]
-
-    def _enforce_borders(self, x, closed_interval):
-        &#34;&#34;&#34;
-        Inserts self.a and self.b into the array x on the first and last
-        positions respectively. If closed_interval=True, the values are
-        extended by small amount, so the actual values a and b are still
-        included in the interpolation range.
-
-        Parameters
-        --------
-        x: numpy array
-            1D vector into which the values are inserted.
-
-        closed_interval: bool
-            Flag, specifying the opened or closed interval.
-        &#34;&#34;&#34;
-        xmin = np.min(x)
-        xmax = np.max(x)
-        extend = (xmax - xmin) / x.size / 100 if closed_interval else 0
-        if xmin != self.a - extend:
-            x = np.insert(x, 0, self.a - extend)
-        if xmax != self.b + extend:
-            x = np.append(x, self.b + extend)
-        return x
-
-    def _infer_nbins(self, n, bins):
-        &#34;&#34;&#34;
-        Infers or validates the number of bins.
-
-        Parameters
-        --------
-        n: int
-            Size of the training data.
-
-        bins:
-            User specified value of bins.
-        &#34;&#34;&#34;
-        if bins == 0:
-            bins = min(n, 5000)
-        assert bins &gt; 2 and bins &lt;= n
-        self.bins = bins
-
-    def _prevent_same(self, x):
-        &#34;&#34;&#34;
-        Adds tiny noise to prevent same values in a vector if there are any.
-
-        Parameters
-        --------
-        x: 1D numpy array
-            Array with potential of having not unique elements.
-
-        Returns
-        --------
-        Sorted array with added small noise based on self.tinity. The aim is
-        to have all elements in the array unique.
-        &#34;&#34;&#34;
-        s = np.array(list(set(x)))
-        if x.size != len(s):
-
-            # Find the smallest distance between two consecutive elements
-            mindist = np.abs(np.min(np.ediff1d(s))) if len(s) &gt; 1 else 1
-
-            # Add tiny noise that is smaller than the smalledst distance
-            tiny_noise = np.random.rand(x.size) * (mindist / self.tinity)
-            x += tiny_noise
-            x = np.sort(x)
-
-            # Recursion for handling extremely rare case that there
-            # are still some elements that are not unique
-            return self._prevent_same(x)
-        else:
-            return x
-
-    def _infer_cdf_ppf(self, x, prevent_same):
-        &#34;&#34;&#34;
-        Learning of the target distribution is done by linear interpolation
-        on a latice. This method infers approximation of source&#39;s
-        Cumulative distribution function and Percent point function.
-
-        Parameters
-        --------
-        x: numpy array
-            1D vector used for the interpolation.
-        prevent_same: bool
-            Flag, specifying whether to add small noise to values on the
-            latice so the interpolation data do not have the exact same values.
-            Applied only if there are some.
-        &#34;&#34;&#34;
-
-        # Define latice on which to interpolate, more points = bigger precision
-        latice = np.linspace(0, self.n - 1, self.bins).astype(int)
-
-        # Get values of x on latice points by partial sort
-        x.partition(latice)
-        values_on_latice = np.sort(x[latice])
-
-        # Adds tiny noise to prevent same values if necessary
-        # Leave first and last values untouched to retain bbox
-        if prevent_same:
-            values_on_latice[1:-1] = self._prevent_same(values_on_latice[1:-1])
-
-        # Normalize the latice by nubmer of samples
-        # Cummulative density function must sum up to 1
-        latice = latice / (self.n - 1)
-
-        # Interpolate to get cdf and ppf
-        from scipy.interpolate import interp1d
-        self.source_cdf = interp1d(values_on_latice, latice, kind=&#39;linear&#39;)
-        self.source_ppf = interp1d(latice, values_on_latice, kind=&#39;linear&#39;)
-
-    def compute_empirical_cdf_error(self, x, error_func=&#39;mse&#39;):
-        &#34;&#34;&#34;
-        Computes error caused by approximation of transform function.
-        Error computation needs to sort all data. It can take a long time
-        for big arrays.
-
-        Parameters
-        --------
-        x: numpy array
-            1D vector of transformed data.
-        error_func: callable or one of {&#39;mae&#39;, &#39;mse&#39;}
-            Callable that computes error on two vectors.
-            &#39;mae&#39; = Error in L1 norm (Mean Absolute Error)
-            &#39;mse&#39; = Error in L2 norm (Mean Squared Error)
-
-        Returns
-        --------
-        Float value of specified error or return value of callable.
-        &#34;&#34;&#34;
-
-        if error_func == &#39;mse&#39;:
-            from sklearn.metrics import mean_squared_error as errfunc
-        elif error_func == &#39;mae&#39;:
-            from sklearn.metrics import mean_absolute_error as errfunc
-        else:
-            errfunc = error_func
-            assert callable(errfunc), \
-                &#39;Set error_func to &#34;mse&#34;, &#34;mae&#34; or func that computes error.&#39;
-
-        transformed = self.transform(x)
-        transformed = np.sort(transformed)
-        n = transformed.size
-        p_lower = self.target_cdf(transformed[0])
-        p_upper = self.target_cdf(transformed[-1])
-        v = p_lower + ((p_upper - p_lower) / (n - 1)) * np.arange(0, n)
-        w = self.target_cdf(transformed)
-        return errfunc(v, w)
-
-    def plot_transform_function(self, figsize=(15, 2)):
-        &#34;&#34;&#34;
-        Displays matplotlib plot of the fitted transform function.
-
-        Parameters
-        --------
-        figsize : tuple (width, height), optional, default (15,2)
-            Desired size of the figure.
-        &#34;&#34;&#34;
-        assert self.fitted, &#39;First, the object must be fitted using fit().&#39;
-
-        x_axis = np.linspace(self.a, self.b, 1000)
-        transformed = self.transform(x_axis)
-
-        import matplotlib.pyplot as plt
-        plt.figure(figsize=figsize)
-        plt.plot(x_axis, transformed)
-        plt.title(&#39;Learned monotonic piecewise smooth transform function&#39;)
-        plt.xlim(self.a, self.b)
-        plt.show()
-        plt.close()
-
-    def plot_source_pdf(self, smoothed=True, figsize=(15, 2)):
-        &#34;&#34;&#34;
-        Displays matplotlib plot of the learned source probability density
-        function.
-
-        Parameters
-        --------
-        smoothed: boolean, optional, default True
-            Applies savgol_filter to smooth the curve that is disturbed by
-            derivatives at bin transitions.
-
-        figsize : tuple (width, height), optional, default (15,2)
-            Desired size of the figure.
-        &#34;&#34;&#34;
-        assert self.fitted, &#39;First, the object must be fitted using fit().&#39;
-
-        steps = 1000
-        step = (self.b - self.a) / steps
-
-        x_axis = np.linspace(self.a, self.b, steps, endpoint=False)
-        x_axis = x_axis[1:]
-
-        if self.known_distribution:
-            if self.source_pdf is not None:
-                curve = self.source_pdf(x_axis)
-                title = &#39;Pdf of known distribution.&#39;
-                text = None
-            else:
-                print(&#39;&#39;&#39;Can&#39;t plot source pdf. Class of known distribution
-                does not implement pdf().&#39;&#39;&#39;, file=sys.stderr)
-                return
-        else:
-            from scipy.misc import derivative
-            curve = derivative(self.source_cdf, x_axis, dx=step / 2)
-            sm = &#39;&#39;
-            if smoothed:
-                from scipy.signal import savgol_filter
-                win_width = steps // 16
-                if win_width % 2 == 0:
-                    win_width += 1
-                curve = savgol_filter(curve, win_width, 1)
-                sm = &#39; (smoothed)&#39;
-            title = &#39;Source_pdf{} approximated using {} bins.&#39;.format(
-                sm, self.bins)
-            text = &#39;&#39;&#39;\nMay not show appropriate results with certain source
-             distributions. In which case rather plot a histogram of your train
-             data.&#39;&#39;&#39;
-
-        import matplotlib.pyplot as plt
-        plt.figure(figsize=figsize)
-        plt.plot(x_axis, curve)
-        plt.title(title)
-        plt.xlim(self.a, self.b)
-        plt.ylim((0., 1.2 * np.max(curve)))
-        if text is not None:
-            ax = plt.gca()
-            plt.text(0.5, -0.4,
-                     text,
-                     size=10,
-                     ha=&#39;center&#39;,
-                     va=&#39;bottom&#39;,
-                     transform=ax.transAxes)
-        plt.show()
-        plt.close()
-
-    def plot_hist(self, data, nbins=None, title=&#39;Histogram&#39;,
-                  figsize=(15, 2), xlim=None):
-        &#34;&#34;&#34;
-        Displays matplotlib histogram of the specified data and nbins.
-
-        Parameters
-        --------
-        data : numpy array
-            Specifying the position of data points on x axis.
-
-        nbins : int, optional, default self.bins
-            Specifying the number of bins of the histogram.
-            If None, the number will be automatically set by matplotlib.
-
-        title : str, optional, default &#39;Histogram&#39;
-            Title of the plot.
-
-        figsize : tuple (width, height), optional, default (15,2)
-            Desired size of the figure.
-
-        xlim : float, optional, default None
-            Limit of x axis.
-        &#34;&#34;&#34;
-        import matplotlib.pyplot as plt
-        plt.figure(figsize=figsize)
-        if self.known_distribution is None:
-            if nbins is None and self.n &gt; 2500:
-                nbins = min(self.bins, 301)
-        if xlim is not None:
-            plt.xlim(xlim)
-        plt.hist(data, nbins)
-        plt.title(title)
-        plt.show()
-        plt.close()
-
-
-class Redistributor_multi():
-    &#34;&#34;&#34;
-    Multi-dimensional wrapper for Redistributor.
-    Allows to use multiple Redistributors on equal-sized slices (submatrices)
-    of N-dimensional input array. Utilizes parallel processing with low memory
-    footprint.
-
-    Parameters:
-    --------
-
-    redistributors: numpy array of Redistributor objects
-        Objects that will be used to operate on the data within each slice
-        defined by nsub. Shape must be the same as nsub.
-
-    nsub: tuple of int
-        Tuple specifying how to split multidimensional input
-        into submatrices. Corresponding redistributor object will
-        be applied on each submatrix separately. Each int
-        specifies to how many equal submatrices corresponding
-        axis should be split. There must be exactly one int
-        for each axis of multidimensional input data.
-
-    cpus: int &gt;= 0
-        Number of cpu cores to use in multiprocessing.
-        If 0, all cores will be used.
-    &#34;&#34;&#34;
-
-    def __init__(self, redistributors, nsub, cpus=0):
-        self.nsub = np.array(nsub)
-        if np.prod(self.nsub == 1):
-            print(&#39;&#39;&#39;WARNING: Using Redistributor_multi on whole matrix is
-                slower than just Redistributor.&#39;&#39;&#39;, file=sys.stderr)
-        self.redistributors = redistributors
-        assert self.redistributors.size == np.prod(
-            self.nsub), &#39;Specify one redistributor per slice.&#39;
-        self.cpus = self._infer_cpus(cpus)
-        self.fitted = False
-
-    def _infer_cpus(self, cpus):
-        &#34;&#34;&#34;
-        Keeps the defined number of cpus or tries to set it to all
-        available cpus if cpus = 0.
-        &#34;&#34;&#34;
-        if cpus == 0:
-            try:
-                from multiprocessing import cpu_count
-                return cpu_count()
-            except NotImplementedError:
-                return 1  # default
-        else:
-            return cpus
-
-    def fit(self, x=None, size_limit=0):
-        &#34;&#34;&#34;
-        Fits all Redistributor objects in self.redistributors.
-
-        Parameters
-        --------
-        x : numpy array, optional, default None
-            Data to fit on. If None, Redistributors must have
-            source set explicitly.
-
-        size_limit : float, optional, default 0
-            Should be 3x smaller than available memory after loading the data
-            in GB. Based on this value, the appropriate size of chunk is
-            infered. If size_limit == 0, the best value is computed
-            automatically.
-        &#34;&#34;&#34;
-        if x is not None:
-            self.x = x
-            self.machinery(&#39;fit&#39;, size_limit=size_limit)
-        self.fitted = True
-
-    def transform(self, x, inplace=True, size_limit=0):
-        &#34;&#34;&#34;
-        Transforms data in x using fitted Redistributors.
-
-        Parameters
-        --------
-        x : numpy array
-            Data to transform.
-
-        inplace : bool, optional, default True
-            Flag specifying whether to change the data in place without
-            keeping the original values stored in x or operate on copy.
-
-        size_limit : float, optional, default 0
-            See docstring of self.fit
-
-        Returns
-        --------
-        Transformed data with same shape as input.
-        &#34;&#34;&#34;
-        self.inplace = inplace
-        self.x = x if self.inplace else x.copy()
-        return self.machinery(&#39;transform&#39;, size_limit=size_limit)
-
-    def inverse_transform(self, x, inplace=True, size_limit=0):
-        &#34;&#34;&#34;
-        Inverse transforms the data in x using fitted Redistributors.
-
-        Parameters
-        --------
-        x : numpy array
-            Data to transform.
-
-        inplace : bool, optional, default True
-            Flag specifying whether to change the data in place without
-            keeping the original values stored in x or operate on copy.
-
-        size_limit : float, optional, default 0
-            See docstring of self.fit
-
-        Returns
-        --------
-        Inverse transformed data with same shape as input.
-        &#34;&#34;&#34;
-        self.inplace = inplace
-        self.x = x if self.inplace else x.copy()
-        return self.machinery(&#39;inverse&#39;, size_limit=size_limit)
-
-    def _locate_subarrays(self, xshape, nsub):
-        &#34;&#34;&#34;
-        Locates subarrays within matrix x according to nsub.
-
-        Returns
-        --------
-        - Numpy array of indices that locate the subarrays within matrix x.
-        - Shape of subarray that would be produced by slicing the matrix.
-        Each subarray is of equal shape.
-        &#34;&#34;&#34;
-
-        nsub = np.array(nsub)
-        shape = np.array(xshape)
-        steps, rems = np.divmod(shape, nsub)
-        assert all(rems == 0), \
-            &#39;Nsub does not divide the x equally on {} axes.&#39;.format(
-                np.nonzero(rems)[0])
-        steps = np.array(shape / nsub).astype(int)
-        output_shape = steps
-
-        subarray_indices = [list(zip(
-            range(0, shape[axis], steps[axis]),
-            range(0 + steps[axis], shape[axis] + steps[axis], steps[axis])))
-            for axis in range(len(nsub))]
-
-        return (np.array(list(itertools.product(*subarray_indices))),
-                output_shape)
-
-    def _indices_to_slices(self, indices):
-        &#34;&#34;&#34;
-        Converts np array of start and stop indices to np array of slices.
-        &#34;&#34;&#34;
-        shape = indices.shape
-        assert shape[-1] in (2, 3), \
-            &#39;indices.shape[-1] must be 2 or 3 for (start, stop, [step]).&#39;
-        indices = indices.reshape(-1, 2)
-        return np.array([slice(*ind) for ind in indices]).reshape(shape[:-1])
-
-    def _get_size_limit(self):
-        &#34;&#34;&#34;
-        Checks available memory and decides on size_limit for
-        self._get_chunksize.
-        &#34;&#34;&#34;
-        try:
-            import psutil
-            size_limit = psutil.virtual_memory().available / 2.2e09
-            if size_limit &lt; 0.1:
-                print(&#39;&#39;&#39;WARNING: It seems you have too low available memory.
-                The speed might be influenced significantly. For optimal speed
-                it is good to have ~2x size_limit of free memory after loading
-                tha data that are being processed. Size_limit for one chunk of
-                sharedctypes array was set to default 0.5GB. Consider using
-                self.cpus = 1.&#39;&#39;&#39;, file=sys.stderr)
-                return 0.5
-            else:
-                return size_limit
-        except:
-            import sys
-            print(&#39;&#39;&#39;WARNING: Unable to obtain the size of available memory.
-            Size_limit for one chunk of sharedctypes array was set to default
-            0.5GB. For optimal speed it is good to have ~2x size_limit of free
-            memory after loading tha data that are being processed.&#39;&#39;&#39;,
-                  file=sys.stderr)
-            return 0.5
-
-    def _get_chunksize(self, size_limit):
-        &#34;&#34;&#34;
-        Returns number of slices that should be in one chunk so the size of
-        chunk is ideally equal to size_limit. Divides all slices to chunks
-        with agreement to self.nsub. The size of chunk will be bigger if it is
-        not possible. No matter the size, it never returns 1, because the whole
-        class looses its meaning. Returns 1 only if the np.prod(self.nsub) == 1
-        which is discouraged.
-
-        Parameters
-        --------
-        size_limit : float
-            Ideal size of one chunk so the sharedctypes array used
-            in multiprocessing pipe in self.machinery is created as fast
-            as possible.
-        &#34;&#34;&#34;
-        all_slices = np.prod(self.nsub)
-        last_best = 1
-        slice_size = self.x.nbytes / all_slices * 1e-09  # in GB
-        for i, n in enumerate(self.nsub):
-            if n == 1:
-                continue
-            returnOne = False if np.prod(self.nsub[i + 1:]) == 1 else True
-            possible_steps_on_axis = np.array(list(reversed(sorted(_divisors(
-                n, returnOne=returnOne, returnX=True)))))
-            slices_in_chunk = possible_steps_on_axis * np.prod(
-                self.nsub[i + 1:])
-            for s in slices_in_chunk:
-                if s * slice_size &lt;= size_limit:
-                    return s
-                last_best = s
-        return last_best
-
-    @staticmethod
-    def init_global_array(array):
-        &#34;&#34;&#34;Initializer of shared array for multiprocessing pool.&#34;&#34;&#34;
-        global arr
-        arr = array
-
-    @staticmethod
-    def populate(args):
-        &#34;&#34;&#34;
-        Static method called by child processes that applies desired
-        function of redistributor on the data from shared matrix on
-        desired location and populates the result back to the shared matrix.
-        &#34;&#34;&#34;
-        index, location, shape, redistributor, purpose, cpus = args
-        if cpus == 1:
-            # Get the access to the global array
-            matrix = arr
-        else:
-            # Get the access to shraed array
-            matrix = np.ctypeslib.as_array(arr)
-
-        # Take the vector from the shared array
-        v = matrix[tuple(location)].ravel()
-
-        if purpose == &#39;fit&#39;:
-            redistributor.fit(v)
-        elif purpose == &#39;transform&#39;:
-            matrix[tuple(location)] = redistributor.transform(v).reshape(shape)
-        elif purpose == &#39;inverse&#39;:
-            matrix[tuple(location)] = redistributor.inverse_transform(
-                v).reshape(shape)
-
-        return index, redistributor
-
-    def machinery(self, purpose, size_limit):
-        &#34;&#34;&#34;
-        Handles locating subarrays and their parallel processing in chunks.
-
-        Parameters
-        --------
-        purpose : one of {&#39;fit&#39;, &#39;transform&#39;, &#39;inverse&#39;}
-            Specifies what should be done with the data.
-
-        size_limit : float
-            Ideal size of one chunk. 0 = automatic.
-        &#34;&#34;&#34;
-
-        # Number of all subarrays that will be used
-        n_subarrays = np.prod(self.nsub)
-
-        # Get subarray locations (list of indices)
-        indices, output_shape = self._locate_subarrays(self.x.shape, self.nsub)
-
-        # Avoiding multiprocessing and the overhead of creating shared_array
-        if self.cpus == 1:
-            locations = self._indices_to_slices(indices).tolist()
-            Redistributor_multi.init_global_array(self.x)
-            list(map(Redistributor_multi.populate,
-                     zip(range(len(locations)),
-                         locations,
-                         itertools.repeat(output_shape),
-                         self.redistributors.ravel(),
-                         itertools.repeat(purpose),
-                         itertools.repeat(self.cpus))))
-
-        # Using pool of child processes running in parallel
-        else:
-            from multiprocessing import Pool
-            from multiprocessing import RawArray
-
-            # Get chunksize for splitting the self.x so creation of
-            # shared_array is faster
-            if size_limit == 0:
-                size_limit = self._get_size_limit()
-            chunksize = self._get_chunksize(size_limit)
-            stepsize = n_subarrays // chunksize
-
-            chunked_indices = indices.reshape(stepsize, -1, len(self.nsub), 2)
-            locations_of_subarrays_within_each_chunk = self._indices_to_slices(
-                chunked_indices[0]).tolist()
-
-            for i, chunks_subarray_indices in enumerate(chunked_indices):
-                # Find start and stop of chunk slice in each axis
-                mins = np.min(chunks_subarray_indices, axis=2)[0]
-                maxs = np.max(chunks_subarray_indices, axis=2)[-1]
-                indices_of_chunk = np.array(list(zip(mins, maxs)))
-                location_of_chunk = self._indices_to_slices(
-                    indices_of_chunk).tolist()
-
-                # Create a shared memory array that is accessible by the
-                # child processes
-                s = self.x[tuple(location_of_chunk)].copy()
-                tmp = np.ctypeslib.as_ctypes(s)
-
-                # Creating a shared array if much faster when the underlying
-                # C code can make a copy of it. If there is not that much
-                # available memory left it replaces value by value in place
-                # which takes significantly more time. That is the reason this
-                # is chunkized into smaller arrays and done in a for loop.
-                shared_array = RawArray(tmp._type_, tmp)
-                del s
-                del tmp
-
-                pool = Pool(processes=self.cpus,
-                            initializer=Redistributor_multi.init_global_array,
-                            initargs=(shared_array, ))
-
-                p = pool.map(Redistributor_multi.populate,
-                             zip(range(i * chunksize, (i + 1) * chunksize),
-                                 locations_of_subarrays_within_each_chunk,
-                                 itertools.repeat(output_shape),
-                                 self.redistributors.ravel(),
-                                 itertools.repeat(purpose),
-                                 itertools.repeat(self.cpus)))
-
-                # Update redistributor objects after being changed
-                [np.put(self.redistributors, i, instance) for i, instance in p]
-
-                pool.close()
-                pool.join()
-
-                if purpose != &#39;fit&#39;:
-                    self.x[tuple(location_of_chunk)] = np.ctypeslib.as_array(
-                        shared_array)
-
-                # Freeing the memory
-                del shared_array
-
-        # Returning the results
-        if purpose == &#39;fit&#39;:
-            output = None
-        else:
-            output = self.x
-
-        # Cleaning up the object
-        del self.x
-        return output</code></pre>
+        r = {}
+        n = 0
+        prev = v = i = j = a = b = None
+        for p, (d, dd) in enumerate(zip(diff, diff[1:])):
+            if d == 0:  # Duplicate value
+                v = array[p]
+                if n == 0:  # First occurence
+                    a = array[p] if p == 0 else array[p - 1]
+                    i = p  # First occurence index
+                n += 1
+                if dd != 0:  # Last occurence
+                    b = array[p + 2] if p + 2 &lt; array.size else array[p + 1]
+                    j = p + 1  # Last occurence index
+
+                    # Two duplicates next to each other must share interval
+                    # Proportion for each is assigned based on their counts
+                    if prev is not None and v == r[prev][4]:
+                        pn = r[prev][0]  # Previous n
+                        d1 = prev - r[prev][3]  # Interval left of prev
+                        d2 = v - prev  # Interval left of current value
+                        d3 = b - v  # Interval right of current value
+                        pw = (pn * d2) / (d1 + d2)  # weight of prev val
+                        cw = (n * d2) / (d2 + d3)  # weight of current val
+                        a = prev + (d2 * pw) / (pw + cw)
+                        r[prev][4] = a  # Adjust previous val&#39;s b value
+
+                    # Store result and restart counters
+                    r[v] = [n, i, j, a, b]  # Mutable for adjustments
+                    prev = v
+                    v = i = j = a = b = None
+                    n = 0
+        return r
+
+    eps = 1e3 * np.finfo(array.dtype).eps
+
+    # Assuming sorted array
+    _min, _max = array[0], array[-1]
+    diff = np.ediff1d(array, to_end=_max)
+    if np.any(diff &lt; 0):
+        raise ValueError(&#39;Array must be sorted.&#39;)
+
+    # Find all duplicates
+    dupl = diff == 0
+
+    # No work if no duplicates
+    n_duplicates = dupl.sum()
+    if n_duplicates == 0:
+        return array
+
+    if n_duplicates == duplicates:
+        warnings.warn((
+            f&#39;Returning non-unique. Unable to remove {n_duplicates} &#39;
+            f&#39;({(n_duplicates / array.size) * 100}%) duplicates.&#39;))
+        return array
+
+    warnings.warn(
+        (f&#39;Adjusting {n_duplicates / array.size * 100}% non-unique &#39;
+         &#39;lattice values. Avoid learning discrete distributions.&#39;))
+
+    if (n_duplicates &gt; int(5e3) or mode == &#39;noise&#39;) and duplicates is None:
+        warnings.warn((
+            f&#39;Array has too many duplicates ({n_duplicates}) &#39;
+            &#39;to use the deterministic algorithm. Solving some &#39;
+            &#39;or all by adding small random noise.&#39;))
+        change = dupl &amp; np.logical_not((array == _min) | (array == _max))
+        array[change] += random_state.uniform(eps, 10 * eps, change.sum())
+        return make_unique(
+            np.sort(array), random_state, mode, n_duplicates)
+    else:
+        # If there is not that many duplicates, we use
+        # this method, which would be otherwise slower.
+        intervals = _get_intervals(array, diff)
+        for k, v in intervals.items():
+            n, i, j, a, b = v
+            if mode == &#39;cluster&#39;:
+                a = np.max([a, k - n * eps])
+                b = np.min([b, k + n * eps])
+
+            # Using size n+1+n%2 to avoid a and k in lin
+            lin = np.linspace(a, b, n + 1 + n % 2, endpoint=False,
+                              dtype=array.dtype)[1 + n % 2:]
+            if k in lin:  # Accidentely linspace falls on k
+                lin = np.sort(np.random.uniform(a, b, n))
+            assert a not in lin and k not in lin, (
+                &#39;a or k in lin, this is a bug. Pls report. &#39;
+                f&#39; {k}, {n}, {a}, {b}, {lin}&#39;)
+            array[i:j] = lin
+
+        return make_unique(
+            np.sort(array), random_state, mode, n_duplicates)
+    </code></pre>
 </details>
 </section>
 <section>
@@ -1116,6 +911,301 @@ class Redistributor_multi():
     return joblib.load(path)</code></pre>
 </details>
 </dd>
+<dt id="redistributor.make_unique"><code class="name flex">
+<span>def <span class="ident">make_unique</span></span>(<span>array, random_state, mode='spread', duplicates=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Takes a sorted array and adjusts the duplicate values such that all
+elements of the array are unique. The adjustment is done by linearly
+separating the duplicates. Read more in docsting of <code>_get_intervals</code>.</p>
+<p>In case <code>mode='keep'</code> this function does nothing and returns the array.</p>
+<p>Supports two deterministic modes 'spread' and 'cluster'. These two
+define onto how large interval the valueas are spread. If 'cluster'
+is not possible 'spread' is used implicitly.</p>
+<p>In case there are too many duplicates (&gt;5e3), first uses addition of
+random noise to non-min and non-max values and then continues with the
+deterministic method.</p>
+<p>Keeps the min, max, and unique values unchanged.
+If the first iteration did not make all elements unique, repeats until
+failure and warns the user (should be rare).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>array</code></strong> :&ensp;<code>1D numpy array</code></dt>
+<dd>Sorted array with potential of having non-unique elements.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>RandomState</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>mode</code></strong> :&ensp;<code>str, one</code> of <code>{'keep', 'spread', 'cluster', 'noise'}</code></dt>
+<dd>Cluster adjusts the values by a tiny amount only.
+Spread uses all available space between consecutive vals.</dd>
+</dl>
+<p>duplicates: int, number of duplicates in previous iteration.
+Do not use, used only for recursion.</p>
+<h2 id="returns">Returns</h2>
+<p>Sorted array of unique elements on the orignal interval.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_unique(array, random_state, mode=&#39;spread&#39;, duplicates=None):
+    &#34;&#34;&#34;
+    Takes a sorted array and adjusts the duplicate values such that all
+    elements of the array are unique. The adjustment is done by linearly
+    separating the duplicates. Read more in docsting of `_get_intervals`.
+
+    In case `mode=&#39;keep&#39;` this function does nothing and returns the array.
+
+    Supports two deterministic modes &#39;spread&#39; and &#39;cluster&#39;. These two
+    define onto how large interval the valueas are spread. If &#39;cluster&#39;
+    is not possible &#39;spread&#39; is used implicitly.
+
+    In case there are too many duplicates (&gt;5e3), first uses addition of
+    random noise to non-min and non-max values and then continues with the
+    deterministic method.
+
+    Keeps the min, max, and unique values unchanged.
+    If the first iteration did not make all elements unique, repeats until
+    failure and warns the user (should be rare).
+
+
+    Parameters
+    ----------
+    array: 1D numpy array
+        Sorted array with potential of having non-unique elements.
+
+    random_state: RandomState
+
+    mode: str, one of {&#39;keep&#39;, &#39;spread&#39;, &#39;cluster&#39;, &#39;noise&#39;}
+        Cluster adjusts the values by a tiny amount only.
+        Spread uses all available space between consecutive vals.
+
+    duplicates: int, number of duplicates in previous iteration.
+        Do not use, used only for recursion.
+
+
+    Returns
+    --------
+    Sorted array of unique elements on the orignal interval.
+    &#34;&#34;&#34;
+
+    if mode == &#39;keep&#39;:
+        return array
+
+    def _get_intervals(array, diff):
+        &#34;&#34;&#34;
+        Iterates over the diff of the array, when it finds a duplicate
+        value (i.e., when diff == 0), it adds it to the result dict and
+        finds the interval onto which the duplicates can be spread such
+        that the value does not jump over previous/next value or it&#39;s
+        intrval. If two duplicate values are right after each other, they
+        share the interval between them based on number of duplicates each
+        of tham has. Note that with array [2, 2] the number of duplicates
+        of the value 2 is counted as 1. The other is original.
+
+        Returns
+        -------
+        dict {value: [n: int, n of val duplicates,
+                      i: int, first index of duplicate value,
+                      j: int, last index of duplicate value,
+                      a: int, start of safe interval,
+                      b: int, end of safe interval]}
+
+        Example
+        -------
+
+        array = [0,0,1,3,4,6,6,6,7,7,9,9]
+        diff  = [0,1,2,1,2,0,0,1,0,2,0,9]
+        r = {
+            0: [1, 0, 1, 0, 1],
+            6: [2, 5, 7, 4, 6.666666666666667],
+            7: [1, 8, 9, 6.666666666666667, 7.923076923076923],
+            9: [1, 10, 11, 7.923076923076923, 9]}
+        &#34;&#34;&#34;
+        r = {}
+        n = 0
+        prev = v = i = j = a = b = None
+        for p, (d, dd) in enumerate(zip(diff, diff[1:])):
+            if d == 0:  # Duplicate value
+                v = array[p]
+                if n == 0:  # First occurence
+                    a = array[p] if p == 0 else array[p - 1]
+                    i = p  # First occurence index
+                n += 1
+                if dd != 0:  # Last occurence
+                    b = array[p + 2] if p + 2 &lt; array.size else array[p + 1]
+                    j = p + 1  # Last occurence index
+
+                    # Two duplicates next to each other must share interval
+                    # Proportion for each is assigned based on their counts
+                    if prev is not None and v == r[prev][4]:
+                        pn = r[prev][0]  # Previous n
+                        d1 = prev - r[prev][3]  # Interval left of prev
+                        d2 = v - prev  # Interval left of current value
+                        d3 = b - v  # Interval right of current value
+                        pw = (pn * d2) / (d1 + d2)  # weight of prev val
+                        cw = (n * d2) / (d2 + d3)  # weight of current val
+                        a = prev + (d2 * pw) / (pw + cw)
+                        r[prev][4] = a  # Adjust previous val&#39;s b value
+
+                    # Store result and restart counters
+                    r[v] = [n, i, j, a, b]  # Mutable for adjustments
+                    prev = v
+                    v = i = j = a = b = None
+                    n = 0
+        return r
+
+    eps = 1e3 * np.finfo(array.dtype).eps
+
+    # Assuming sorted array
+    _min, _max = array[0], array[-1]
+    diff = np.ediff1d(array, to_end=_max)
+    if np.any(diff &lt; 0):
+        raise ValueError(&#39;Array must be sorted.&#39;)
+
+    # Find all duplicates
+    dupl = diff == 0
+
+    # No work if no duplicates
+    n_duplicates = dupl.sum()
+    if n_duplicates == 0:
+        return array
+
+    if n_duplicates == duplicates:
+        warnings.warn((
+            f&#39;Returning non-unique. Unable to remove {n_duplicates} &#39;
+            f&#39;({(n_duplicates / array.size) * 100}%) duplicates.&#39;))
+        return array
+
+    warnings.warn(
+        (f&#39;Adjusting {n_duplicates / array.size * 100}% non-unique &#39;
+         &#39;lattice values. Avoid learning discrete distributions.&#39;))
+
+    if (n_duplicates &gt; int(5e3) or mode == &#39;noise&#39;) and duplicates is None:
+        warnings.warn((
+            f&#39;Array has too many duplicates ({n_duplicates}) &#39;
+            &#39;to use the deterministic algorithm. Solving some &#39;
+            &#39;or all by adding small random noise.&#39;))
+        change = dupl &amp; np.logical_not((array == _min) | (array == _max))
+        array[change] += random_state.uniform(eps, 10 * eps, change.sum())
+        return make_unique(
+            np.sort(array), random_state, mode, n_duplicates)
+    else:
+        # If there is not that many duplicates, we use
+        # this method, which would be otherwise slower.
+        intervals = _get_intervals(array, diff)
+        for k, v in intervals.items():
+            n, i, j, a, b = v
+            if mode == &#39;cluster&#39;:
+                a = np.max([a, k - n * eps])
+                b = np.min([b, k + n * eps])
+
+            # Using size n+1+n%2 to avoid a and k in lin
+            lin = np.linspace(a, b, n + 1 + n % 2, endpoint=False,
+                              dtype=array.dtype)[1 + n % 2:]
+            if k in lin:  # Accidentely linspace falls on k
+                lin = np.sort(np.random.uniform(a, b, n))
+            assert a not in lin and k not in lin, (
+                &#39;a or k in lin, this is a bug. Pls report. &#39;
+                f&#39; {k}, {n}, {a}, {b}, {lin}&#39;)
+            array[i:j] = lin
+
+        return make_unique(
+            np.sort(array), random_state, mode, n_duplicates)</code></pre>
+</details>
+</dd>
+<dt id="redistributor.plot_cdf_ppf_pdf"><code class="name flex">
+<span>def <span class="ident">plot_cdf_ppf_pdf</span></span>(<span>dist, a=None, b=None, bins=None, v=None, w=None, rows=1, cols=3, figsize=(16, 5))</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Just a convinience function for visualizing the dist
+<code>cdf</code>, <code>ppf</code> and <code>pdf</code> functions.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>a</code></strong> :&ensp;<code>float</code></dt>
+<dd>Start of the cdf support</dd>
+<dt><strong><code>b</code></strong> :&ensp;<code>float</code></dt>
+<dd>End of the cdf support</dd>
+<dt><strong><code>v</code></strong> :&ensp;<code>float</code></dt>
+<dd>Start of the ppf support</dd>
+<dt><strong><code>w</code></strong> :&ensp;<code>float</code></dt>
+<dd>End of the ppf support</dd>
+<dt><strong><code>rows</code></strong> :&ensp;<code>int, </code></dt>
+<dd>Number of rows in the figure</dd>
+<dt><strong><code>cols</code></strong> :&ensp;<code>int, </code></dt>
+<dd>Number of cols in the figure</dd>
+<dt><strong><code>figsize</code></strong> :&ensp;<code>None</code> or <code>tuple</code></dt>
+<dd>If None, no new figure is created.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_cdf_ppf_pdf(dist, a=None, b=None, bins=None,
+                     v=None, w=None, rows=1, cols=3, 
+                     figsize=(16, 5)):
+    &#34;&#34;&#34;
+    Just a convinience function for visualizing the dist
+    `cdf`, `ppf` and `pdf` functions.
+    
+    Parameters
+    ----------
+    a: float
+        Start of the cdf support
+    b: float
+        End of the cdf support
+    v: float
+        Start of the ppf support
+    w: float
+        End of the ppf support
+    rows: int, 
+        Number of rows in the figure
+    cols: int, 
+        Number of cols in the figure
+    figsize: None or tuple
+        If None, no new figure is created.
+    &#34;&#34;&#34;
+    import matplotlib.pyplot as plt
+    if a is None:
+        a = dist._get_support()[0]
+    if b is None:
+        b = dist._get_support()[1]
+    if bins is None:
+        bins = dist.bins
+
+    if v is None:
+        v = dist._get_support_ppf()[0]
+    if w is None:
+        w = dist._get_support_ppf()[1]
+
+    x = np.linspace(a, b, bins)
+    y = np.linspace(v, w, bins)
+
+    if figsize is not None:
+        plt.figure(figsize=figsize)
+        plt.tight_layout()
+        
+    plt.subplot(rows, cols, 1)
+    plt.title(f&#39;{dist.name} CDF&#39;)
+    plt.plot(x, dist.cdf(x))
+    
+
+    plt.subplot(rows, cols, 2)
+    plt.title(f&#39;{dist.name} PPF&#39;)
+    plt.plot(y, dist.ppf(y))
+    
+
+    plt.subplot(rows, cols, 3)
+    plt.title(f&#39;{dist.name} PDF&#39;)
+    plt.plot(x, dist.pdf(x))
+    plt.ylim(-0.001, None)
+    
+    if figsize is not None:
+        plt.show()
+        plt.close()
+        return 
+    else:    
+        return plt</code></pre>
+</details>
+</dd>
 <dt id="redistributor.save_redistributor"><code class="name flex">
 <span>def <span class="ident">save_redistributor</span></span>(<span>d, path)</span>
 </code></dt>
@@ -1136,99 +1226,593 @@ class Redistributor_multi():
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="redistributor.LearnedDistribution"><code class="flex name class">
+<span>class <span class="ident">LearnedDistribution</span></span>
+<span>(</span><span>x, a=None, b=None, bins=None, keep_x_unchanged=True, subsample_x=None, ravel_x=True, assume_sorted=False, fill_value='auto', bounds_error='warn', dupl_method='spread', seed=None, name='LearnedDistribution', **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A continuous random variable obtained by estimating the empirical
+distribution of a user provided 1D array of numeric data <code>x</code>. It
+can be used to sample new random points from the learned distribution.</p>
+<p>It approximates the Cumulative Distribution Function (<code>cdf</code>) and
+Percent Point Function (<code>ppf</code>) of the underlying distribution of <code>x</code>
+using linear interpolation on a lattice.</p>
+<p>An approximation of the Probability Density Function (<code>pdf</code>) is
+computed as an interpolation of the numerical derivative of the <code>cdf</code>
+function. Please note it can oscilate a lot if <code>bins</code> is high.</p>
+<p>The distribution is defined on a closed finite interval <code>[a, b]</code> or
+<code>[xmin, xmax]</code> or combination thereof, depending on which bound/s
+were specified by the user.</p>
+<p>WARNING: It can not be used to learn discrete distributions.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>1D numpy array</code></dt>
+<dd>1D vector of which the distribution will be estimated.</dd>
+<dt><strong><code>a</code></strong> :&ensp;<code>numeric</code> or <code>None</code></dt>
+<dd>Left boundary of the distribution support if known.
+If specified, must be smaller than x.min().</dd>
+<dt><strong><code>b</code></strong> :&ensp;<code>numeric</code> or <code>None</code></dt>
+<dd>Right boundary of the distribution support if known.
+If specified, must be bigger than x.max().</dd>
+<dt><strong><code>bins</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>User specified value of bins. Min is 3, max is <code>x.size</code>.
+If None or 0, bins are set automatically. Upper bound
+is set to 1000 to prevent unnecessary computation.
+Used to specify the density of the lattice. More bins
+means higher precision but also more computation.</dd>
+<dt><strong><code>keep_x_unchanged</code></strong> :&ensp;<code>bool</code>, default <code>True</code></dt>
+<dd>
+<p>If True, the <code>x</code> array will be copied before partial sorting.
+This will result in increased memory usage. But it will
+not reorder the user provided array.</p>
+<p>If False, there will not be any additional memory consumption.
+But the user provided array <code>x</code> might change its order.
+This might be very useful if <code>x</code> is a large array and there is
+not enough available memory.</p>
+</dd>
+<dt><strong><code>subsample_x</code></strong> :&ensp;<code>int</code>, default <code>None</code></dt>
+<dd>Sacrifice precision for speed by first subsampling array <code>x</code>
+with a defined integer step. Not doing <code>random.choice()</code> but rather
+simple <code>slice(None, None, subsample_x)</code> because it is faster and
+we assume the array is randomly ordered. Can lead to significant
+speedups.</dd>
+<dt><strong><code>ravel_x</code></strong> :&ensp;<code>bool</code>, default <code>True</code></dt>
+<dd>LearnedDistribution requires 1D arrays. So the <code>x</code> is by default
+flattened to 1D using <code>np.ravel()</code>.</dd>
+<dt><strong><code>assume_sorted</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>If the user knows that <code>x</code> is sorted, setting this to True will
+save a most of time by ommiting partial sorting the array.
+Especially useful if the array <code>x</code> is big. E.g. 1GB of data
+takes approx. 10s to partial sort on 5000 positions.
+If <code>False</code> and <code>x</code> is almost sorted, it will still be faster than
+if <code>x</code> is randomly ordered.</dd>
+<dt><strong><code>fill_value</code></strong> :&ensp;<code>None, array-like, float, 2-tuple</code> or <code>'auto'</code>, default=<code>'auto'</code></dt>
+<dd>Specifies where to map the values out of the <code>cdf</code> support. See the
+docstring of scipy.interpolate.interp1d to learn more about the
+valid options. Additionally, this class enables the user to use
+the default <code>auto</code> option, which sets reasonable <code>fill_value</code>
+automatically.</dd>
+<dt><strong><code>bounds_error</code></strong> :&ensp;<code>bool</code> or <code>'warn'</code>, default <code>'warn'</code></dt>
+<dd>See the docstring of class interp1d_with_warning.</dd>
+<dt><strong><code>dupl_method</code></strong> :&ensp;<code>str, one</code> of <code>{'keep', 'spread', 'cluster', 'noise'}</code></dt>
+<dd>default 'spread'
+Method of solving duplicate lattice values. Read more in
+docstring of <code><a title="redistributor.make_unique" href="#redistributor.make_unique">make_unique()</a></code>.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code>, default <code>'LearnedDistribution'</code></dt>
+<dd>The name of the instance.</dd>
+<dt><strong><code>seed</code></strong> :&ensp;<code>{None, int,</code>numpy.random.Generator<code>,</code></dt>
+<dd><code>numpy.random.RandomState</code>}, default None
+See the docstring of scipy.stats.rv_continuous.
+Used in <code>_prevent_same()</code> and <code>rvs()</code>.</dd>
+</dl>
+<p>kwargs : all other keyword arguments accepted by rv_continous.</p>
+<h2 id="methods-todo-finish-this-documentation">Methods - TODO finish this documentation</h2>
+<p>cdf
+ppf
+pdf
+rvs
+entropy
+&hellip; fill in the rest which is implemented
+&hellip; handle the rest which does not make sense</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LearnedDistribution(rv_continuous):
+    &#34;&#34;&#34;
+        A continuous random variable obtained by estimating the empirical
+        distribution of a user provided 1D array of numeric data `x`. It
+        can be used to sample new random points from the learned distribution.
+
+        It approximates the Cumulative Distribution Function (`cdf`) and
+        Percent Point Function (`ppf`) of the underlying distribution of `x`
+        using linear interpolation on a lattice.
+
+        An approximation of the Probability Density Function (`pdf`) is
+        computed as an interpolation of the numerical derivative of the `cdf`
+        function. Please note it can oscilate a lot if `bins` is high.
+
+        The distribution is defined on a closed finite interval `[a, b]` or
+        `[xmin, xmax]` or combination thereof, depending on which bound/s
+        were specified by the user.
+
+        WARNING: It can not be used to learn discrete distributions.
+
+
+        Parameters
+        ----------
+
+        x : 1D numpy array
+            1D vector of which the distribution will be estimated.
+
+        a : numeric or None
+            Left boundary of the distribution support if known.
+            If specified, must be smaller than x.min().
+
+        b : numeric or None
+            Right boundary of the distribution support if known.
+            If specified, must be bigger than x.max().
+
+        bins : int or None
+            User specified value of bins. Min is 3, max is `x.size`.
+            If None or 0, bins are set automatically. Upper bound
+            is set to 1000 to prevent unnecessary computation.
+            Used to specify the density of the lattice. More bins
+            means higher precision but also more computation.
+
+        keep_x_unchanged : bool, default True
+            If True, the `x` array will be copied before partial sorting.
+            This will result in increased memory usage. But it will
+            not reorder the user provided array.
+
+            If False, there will not be any additional memory consumption.
+            But the user provided array `x` might change its order.
+            This might be very useful if `x` is a large array and there is
+            not enough available memory.
+
+        subsample_x : int, default None
+            Sacrifice precision for speed by first subsampling array `x`
+            with a defined integer step. Not doing `random.choice()` but rather
+            simple `slice(None, None, subsample_x)` because it is faster and
+            we assume the array is randomly ordered. Can lead to significant
+            speedups.
+
+        ravel_x : bool, default True
+            LearnedDistribution requires 1D arrays. So the `x` is by default
+            flattened to 1D using `np.ravel()`.
+
+        assume_sorted : bool, default False
+            If the user knows that `x` is sorted, setting this to True will
+            save a most of time by ommiting partial sorting the array.
+            Especially useful if the array `x` is big. E.g. 1GB of data
+            takes approx. 10s to partial sort on 5000 positions.
+            If `False` and `x` is almost sorted, it will still be faster than
+            if `x` is randomly ordered.
+
+        fill_value : None, array-like, float, 2-tuple or &#39;auto&#39;, default=&#39;auto&#39;
+            Specifies where to map the values out of the `cdf` support. See the
+            docstring of scipy.interpolate.interp1d to learn more about the
+            valid options. Additionally, this class enables the user to use
+            the default `auto` option, which sets reasonable `fill_value`
+            automatically.
+
+        bounds_error : bool or &#39;warn&#39;, default &#39;warn&#39;
+            See the docstring of class interp1d_with_warning.
+
+        dupl_method : str, one of {&#39;keep&#39;, &#39;spread&#39;, &#39;cluster&#39;, &#39;noise&#39;}
+                      default &#39;spread&#39;
+            Method of solving duplicate lattice values. Read more in
+            docstring of `make_unique()`.
+
+        name : str, default &#39;LearnedDistribution&#39;
+            The name of the instance.
+
+        seed : {None, int, `numpy.random.Generator`,
+            `numpy.random.RandomState`}, default None
+            See the docstring of scipy.stats.rv_continuous.
+            Used in `_prevent_same()` and `rvs()`.
+
+        kwargs : all other keyword arguments accepted by rv_continous.
+
+
+        Methods - TODO finish this documentation
+        -------
+
+        cdf
+        ppf
+        pdf
+        rvs
+        entropy
+        ... fill in the rest which is implemented
+        ... handle the rest which does not make sense
+        &#34;&#34;&#34;
+
+    def __init__(self, x, a=None, b=None, bins=None, keep_x_unchanged=True,
+                 subsample_x=None, ravel_x=True, assume_sorted=False,
+                 fill_value=&#39;auto&#39;, bounds_error=&#39;warn&#39;, dupl_method=&#39;spread&#39;,
+                 seed=None, name=&#39;LearnedDistribution&#39;, **kwargs):
+
+        super().__init__(name=name, seed=seed, **kwargs)
+
+        if ravel_x:
+            x = x.ravel()
+
+        # Sacrifice precision for speed
+        if isinstance(subsample_x, int):
+            if 2 &lt;= subsample_x &lt;= x.size:
+                x = x[::subsample_x]
+            else:
+                raise ValueError(&#39;Not 2 &lt;= subsample_x &lt;= x.size.&#39;)
+
+        # Handling input data and interval
+        self._validate_x(x)
+        self.xmin = x.min()
+        self.xmax = x.max()
+        self._validate_a_b(a, b)
+        self.a = a
+        self.b = b
+
+        # Arguments for interpolation
+        self.bounds_error = bounds_error
+        self.fill_value = fill_value
+
+        # Setting lattice density
+        self.bins = self._infer_bins(x.size, bins)
+
+        # Interpolating to get the empirical distribution
+        self.assume_sorted = assume_sorted
+        self.dupl_method = dupl_method
+        lattice, vals = self._get_lattice_and_vals(x, keep_x_unchanged)
+        self._cdf = self._get_cdf(lattice, vals)
+        self._ppf = self._get_ppf(lattice, vals)
+        self._pdf = self._get_pdf()
+
+    def _get_support(self, *args):
+        &#34;&#34;&#34;
+        Support of LearnedDistribution does not depend on any scipy arguments,
+        we keep args only to keep the signature unchanged.
+
+        The support depends only on whether `a` and/or `b` were specified
+        explicitely or as Nones.
+
+        `self.a` and/or `self.b` are kept stored as Nones to keep the
+        information about the object config for future reference of the user.
+
+        Returns
+        -------
+        a, b : numeric (float, or int)
+            end-points of the distribution&#39;s support.
+        &#34;&#34;&#34;
+        return self._cdf.x[0], self._cdf.x[-1]
+
+    def _get_support_ppf(self, *args):
+        &#34;&#34;&#34;
+        The support of `ppf` in scipy is always `[0,1]` so this method does not
+        exist in `rv_continuous`. In our case, the support might be shrinked if
+        any of the a, b is set to None.
+        &#34;&#34;&#34;
+        return self._ppf.x[0], self._ppf.x[-1]
+
+    def _validate_x(self, data):
+        &#34;&#34;&#34;
+        Validation of the input data.
+
+        Parameters
+        --------
+        data: numpy array of data to be validated
+        &#34;&#34;&#34;
+        if not np.issubdtype(data.dtype, np.floating):
+            raise TypeError(&#39;Input array dtype must be floating point.&#39;)
+        if np.issubdtype(data.dtype, np.float16):
+            warnings.warn((
+                &#39;Using float16 data can lead to large errors. &#39;
+                &#39;Rather use f32 or f64.&#39;))
+        if not data.ndim == 1:
+            raise ValueError(&#39;Input array must be 1D. You can use x.ravel().&#39;)
+
+    def _validate_a_b(self, a, b):
+        &#34;&#34;&#34;
+        Validation of the boundaries.
+
+        Parameters
+        --------
+        a: numeric or None
+            See the docstring of __init__().
+        b: numerc or None
+            See the docstring of __init__().
+        &#34;&#34;&#34;
+        if a is not None:
+            if not np.isfinite(a):
+                raise ValueError(f&#39;a {a} must be finite.&#39;)
+            if a &gt;= self.xmin:
+                raise ValueError(f&#39;a {a} must be &lt; than xmin {self.xmin}.&#39;)
+        if b is not None:
+            if not np.isfinite(b):
+                raise ValueError(f&#39;b {b} must be finite.&#39;)
+            if b &lt;= self.xmax:
+                raise ValueError(f&#39;b {b} must be &gt; than xmax {self.xmax}.&#39;)
+
+    def _infer_bins(self, n, bins):
+        &#34;&#34;&#34;
+        Infers and validates the number of bins.
+
+        Parameters
+        --------
+        n: int
+            Size of the data.
+
+        bins: int or None
+            See the docstring of __init__().
+        &#34;&#34;&#34;
+        if bins is None or bins == 0:
+            bins = min(n, int(5e3))
+        if bins &gt; n or bins &lt; 3:
+            raise ValueError(f&#39;Bins ({bins}) must be 2 &lt; bins &lt;= x.size&#39;)
+
+        return bins
+    
+
+    def _get_lattice_and_vals(self, x, keep_x_unchanged):
+        &#34;&#34;&#34;
+        Creating the `lattice` based on the number of `bins` and assembling the
+        corresp. `lattice_vals` from provided array `x` using partial sort.
+
+        Parameters
+        --------
+        x: 1D numpy array
+            See the docstring of __init__().
+
+        keep_x_unchanged: bool
+            See the docstring of __init__().
+
+        Returns
+        -------
+
+        lattice, 1D array of equidistant values
+            Support of ppf or range of cdf. The first value of the array will
+            be either 0 or epsilon and the last value will be either 1 or
+            1 - epsilon depending if a or b are specified or None. Size or the
+            array will range from bins to bins + 2.
+
+        lattice_vals, 1D array
+            Range of ppf or support of cdf. The first value of the array will
+            be either xmin or a and the last value will be either xmax or b
+            depending if a or b are specified or None. Size of the array will
+            be the same as of `lattice`.
+        &#34;&#34;&#34;
+
+        # Do we need expansion by a or b from Left or Right side or both?
+        L, R = self.a is not None, self.b is not None
+
+        # Indices at which we need x to be sorted considering L and R
+        indices = np.linspace(
+            0, x.size + L + R - 1, self.bins).round().astype(int)
+        indices = indices[L:-1 if R else None] - L
+
+        if not self.assume_sorted:
+            # Reorder values of x on indices as if the array was sorted
+            if keep_x_unchanged:
+                # Does not change x but uses twice the memory
+                x = np.partition(x, indices)
+            else:
+                # Does not use additional memory but alters the order of data
+                x.partition(indices)
+
+        # Get the _ppf.y (or _cdf.x) values
+        eps = 1 / (x.size + 1)  # Shrink the lattice with eps to exclude 0 or 1
+        lattice_vals = np.hstack([[self.a] * L, x[indices], [self.b] * R])
+
+        # Get the _ppf.x (or _cdf.y) values
+        lattice = np.linspace(
+            eps * (not L), 1 - eps * (not R), lattice_vals.size)
+
+        if not all(np.isfinite(lattice_vals)):
+            raise ValueError(&#39;Values of x on the lattice must be finite.&#39;)
+
+        # If necessary, make duplicate values unique and warn the user.
+        lattice_vals = make_unique(
+            lattice_vals, self.random_state, mode=self.dupl_method)
+        return lattice, lattice_vals
+
+    def _get_cdf(self, lattice, lattice_vals):
+        &#34;&#34;&#34;
+        Interpolates the lattice on lattice_vals to get the `cdf`.
+
+        Table of `fill_value` if `self.fill_value == &#39;auto&#39;` (n = x.size):
+        ------------------------------------------------------------------
+        a     | b     | cdf support | truncated to | fill_value
+        ------------------------------------------------------------------
+        None  | None  | xmin, xmax  | xmin, xmax   | 1/(n-1), (n-2)/(n-1)
+        None  | b     | xmin, b     | xmin, None   | 1/(n-1), None
+        a     | None  | a,    xmax  | None, xmax   | None, (n-2)/(n-1)
+        a     | b     | a,    b     | None, None   | None, None
+        &#34;&#34;&#34;
+
+        if self.fill_value == &#39;auto&#39;:
+            fill_value = (lattice[0] if self.a is None else None,
+                          lattice[-1] if self.b is None else None)
+        else:
+            # User defined fill_value
+            fill_value = self.fill_value
+
+        return interp1d_with_warning(
+            lattice_vals, lattice, kind=&#39;linear&#39;, assume_sorted=True,
+            bounds_error=self.bounds_error, fill_value=fill_value)
+
+    def _get_ppf(self, lattice, lattice_vals):
+        &#34;&#34;&#34;
+        Interpolates the lattice_vals on a lattice to get the `ppf`.
+        `fill_values` is set to the `xmin` and `xmax` to avoid problems
+        when generating random sample with `rvs()`. `bounds_error` is
+        set to `False` because user does not need a warning about this
+        behaviour and values `q &lt; 0` or `q &gt; 1` should not ever occur at all.
+        &#34;&#34;&#34;
+        fill_value = (lattice_vals[0], lattice_vals[-1])
+        return interp1d_with_warning(
+            lattice, lattice_vals, kind=&#39;linear&#39;, assume_sorted=True,
+            bounds_error=False, fill_value=fill_value)
+
+    def cdf(self, k):
+        # We do not need the default argument checking from scipy
+        # because we handle the invalid values differently using
+        # the class `interp1d_withwarning`. Therefore:
+        k = np.asarray(k)
+        return self._cdf(k)
+
+    def ppf(self, q):
+        # We do not need the default argument checking from scipy
+        # because we handle the invalid values differently using
+        # the class `interp1d_withwarning`. Therefore:
+        q = np.asarray(q)
+        if np.any(q &lt; 0) or np.any(q &gt; 1):
+            raise ValueError(&#39;Some values out of ppf support [0, 1].&#39;)
+        return self._ppf(q)
+
+    def _get_pdf(self):
+        &#34;&#34;&#34;
+        Interpolates a derivative of cdf to obtain the pdf.
+        &#34;&#34;&#34;
+        g = np.linspace(*self._get_support(), self.bins)
+        c = self.cdf(g)  # Evaluated cdf
+        dx = 1 / (g[1] - g[0])
+        dif = np.round(np.ediff1d(c, to_begin=c[1] - c[0]) * dx, decimals=10)
+        return interp1d_with_warning(g, dif, kind=&#39;linear&#39;, assume_sorted=True)
+
+    def _entropy(self, *args):
+        &#34;&#34;&#34;
+        Differential entropy of the learned RV.
+        &#34;&#34;&#34;
+        from scipy.special import entr
+        from scipy.integrate import simpson
+        g = np.linspace(*self._get_support(), self.bins)
+        return simpson(entr(self._pdf(g)), x=g)
+
+    def rvs(self, size, random_state=None):
+        &#34;&#34;&#34;
+        Random sample from the learned distribution.
+        &#34;&#34;&#34;
+        if random_state is None or type(random_state) is int:
+            from numpy.random import default_rng
+            random_state = default_rng(random_state)
+        return self.ppf(
+            random_state.uniform(*self._get_support_ppf(), size=size))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>scipy.stats._distn_infrastructure.rv_continuous</li>
+<li>scipy.stats._distn_infrastructure.rv_generic</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="redistributor.LearnedDistribution.cdf"><code class="name flex">
+<span>def <span class="ident">cdf</span></span>(<span>self, k)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Cumulative distribution function of the given RV.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>array_like</code></dt>
+<dd>quantiles</dd>
+<dt>arg1, arg2, arg3,&hellip; : array_like</dt>
+<dt>The shape parameter(s) for the distribution (see docstring of the</dt>
+<dt>instance object for more information)</dt>
+<dt><strong><code>loc</code></strong> :&ensp;<code>array_like</code>, optional</dt>
+<dd>location parameter (default=0)</dd>
+<dt><strong><code>scale</code></strong> :&ensp;<code>array_like</code>, optional</dt>
+<dd>scale parameter (default=1)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>cdf</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>Cumulative distribution function evaluated at <code>x</code></dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cdf(self, k):
+    # We do not need the default argument checking from scipy
+    # because we handle the invalid values differently using
+    # the class `interp1d_withwarning`. Therefore:
+    k = np.asarray(k)
+    return self._cdf(k)</code></pre>
+</details>
+</dd>
+<dt id="redistributor.LearnedDistribution.ppf"><code class="name flex">
+<span>def <span class="ident">ppf</span></span>(<span>self, q)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Percent point function (inverse of <code>cdf</code>) at q of the given RV.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>q</code></strong> :&ensp;<code>array_like</code></dt>
+<dd>lower tail probability</dd>
+<dt>arg1, arg2, arg3,&hellip; : array_like</dt>
+<dt>The shape parameter(s) for the distribution (see docstring of the</dt>
+<dt>instance object for more information)</dt>
+<dt><strong><code>loc</code></strong> :&ensp;<code>array_like</code>, optional</dt>
+<dd>location parameter (default=0)</dd>
+<dt><strong><code>scale</code></strong> :&ensp;<code>array_like</code>, optional</dt>
+<dd>scale parameter (default=1)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>array_like</code></dt>
+<dd>quantile corresponding to the lower tail probability q.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ppf(self, q):
+    # We do not need the default argument checking from scipy
+    # because we handle the invalid values differently using
+    # the class `interp1d_withwarning`. Therefore:
+    q = np.asarray(q)
+    if np.any(q &lt; 0) or np.any(q &gt; 1):
+        raise ValueError(&#39;Some values out of ppf support [0, 1].&#39;)
+    return self._ppf(q)</code></pre>
+</details>
+</dd>
+<dt id="redistributor.LearnedDistribution.rvs"><code class="name flex">
+<span>def <span class="ident">rvs</span></span>(<span>self, size, random_state=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Random sample from the learned distribution.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def rvs(self, size, random_state=None):
+    &#34;&#34;&#34;
+    Random sample from the learned distribution.
+    &#34;&#34;&#34;
+    if random_state is None or type(random_state) is int:
+        from numpy.random import default_rng
+        random_state = default_rng(random_state)
+    return self.ppf(
+        random_state.uniform(*self._get_support_ppf(), size=size))</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="redistributor.Redistributor"><code class="flex name class">
 <span>class <span class="ident">Redistributor</span></span>
-<span>(</span><span>target=&lt;scipy.stats._distn_infrastructure.rv_frozen object&gt;, known_distribution=None, bbox=None, closed_interval=True, prevent_same=True, tinity=1000000, validate_input=True, bins=0)</span>
+<span>(</span><span>source, target)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>An algorithm for automatic transformation of data from arbitrary
-distribution into arbitrary distribution. Source distribution
-can be known beforehandand or learned from the data. Transformation
-is piecewise smooth, monotonic and invertible.</p>
+distribution into arbitrary distribution. Source and target distributions
+can be known beforehandand or learned from the data using
+LearnedDistribution class. Transformation is piecewise linear, monotonic
+and invertible.</p>
 <p>Implemented as a Scikit-learn transformer. Can be fitted on 1D vector
-(for more dimensions use Redistributor_multi wrapper) and saved to be used
-later for transforming other data assuming the same source distribution.</p>
-<p>Uses source's and target's cdf() and ppf() to infer the
+and saved to be used later for transforming other data assuming the same
+source distribution.</p>
+<p>Uses source's and target's <code>cdf()</code> and <code>ppf()</code> to infer the
 transform and inverse transform functions.</p>
-<p>transform_function = target_ppf(source_cdf(x))
-inverse_transform = source_ppf(target_cdf(x))</p>
-<h2 id="time-complexity">Time Complexity</h2>
-<p>This algorithm can scale to a large number of samples &gt; 1e08.
-Algorithm can be sped up by:
-1. Turning off input data validation by setting validate_input=False
-2. Choosing target distribution with fast cdf and ppf functions.
-3. Specifying the source distribution if it is known.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>target</code></strong> :&ensp;<code>obj</code>, optional, default <code>scipy.stats.norm(loc=0, scale=1)</code></dt>
-<dd>Class specifying the target distribution. Must implement
-cdf(), ppf() and ideally pdf() methods.
-Continuous distributions from scipy.stats can be used.</dd>
-<dt><strong><code>known_distribution</code></strong> :&ensp;<code>obj</code>, optional, default <code>None</code></dt>
-<dd>Object specifying the source distribution when known.
-Must implement cdf(), ppf() and ideally pdf() methods.
-Continuous distributions from scipy.stats can be used.</dd>
-<dt><strong><code>bbox</code></strong> :&ensp;<code>tuple</code>, optional, default <code>None</code></dt>
-<dd>Tuple (a, b) which represent the lower and upper boundary
-of the source distribution's domain.</dd>
-<dt><strong><code>closed_interval</code></strong> :&ensp;<code>bool</code>, optional, default <code>True</code></dt>
-<dd>If True, the values set in bounding box are included into
-the interpolation range.</dd>
-<dt><strong><code>prevent_same</code></strong> :&ensp;<code>bool</code>, optional, default <code>True</code></dt>
-<dd>Flag, specifyig whether to prevent same values in the
-interpolated vector.</dd>
-<dt><strong><code>tinity</code></strong> :&ensp;<code>int</code>, default <code>1e06</code></dt>
-<dd>Specifies divisor of noise added to vectors with same elements.
-Bigger the tinity, smaller the noise.</dd>
-<dt><strong><code>validate_input</code></strong> :&ensp;<code>bool</code>, optional, default <code>True</code></dt>
-<dd>Flag specifying if the input data should be validated.
-Turn off to save computation time. Output is undefined
-if the data are not valid.</dd>
-<dt><strong><code>bins</code></strong> :&ensp;<code>int</code>, optional, default <code>0</code></dt>
-<dd>
-<p>Number of bins which are used to infer the latice density
-when the distribution is learned. Irelevant with known_distribution.</p>
-<p>If bins = x.size, then latice density = 100%. The interpolation step =
-x.size // bins = 1. This is most precise. If x.size is big enough,
-we can lower the latice density and the fit will remain very precise.</p>
-<p>If bins = 0, it is set automatically. The latice density = 100%
-is then used up to x.size = 5000. If x.size &gt; 5000, bins = 5000.</p>
-</dd>
-</dl>
-<h2 id="attributes">Attributes</h2>
-<p>self.target_cdf: callable, default scipy.stats.norm(loc=0, scale=1).cdf
-Cummulative Density Function of target distribution.</p>
-<p>self.target_ppf: callable, default scipy.stats.norm(loc=0, scale=1).ppf
-Percent Point Function (inverse of cdf) of target distribution.</p>
-<p>self.source_cdf: callable, default None
-Either known_distribution.cdf function of source distribution
-or learned on fit() by interpolation on latice.</p>
-<p>self.source_ppf: callable, default None
-Either known_distribution.ppf function of source distribution
-or learned on fit() by interpolation on latice.</p>
-<p>self.a: float, default None
-Beginning of the interval of the source distribution domain.</p>
-<p>self.b: float, default None
-End of the interval of the source distribution domain.</p>
-<p>self.n: int, default None
-Size of the training data extened by bounding box borders if necessary.</p>
-<p>self.fitted: bool, default False
-Flag that specifies whether the fit() was already called.</p>
-<h2 id="limitations">Limitations</h2>
-<ul>
-<li>
-<p>Output is undefined when most of the data points have the exact
-same value, therefore data should not be sparse - multiple zeros etc.
-Handles small amounts of the exact same values by adding tiny noise.</p>
-</li>
-<li>
-<p>Plotting of learned pdf() is just a smoothed approximation obtained
-by 1st derivative of the learned piece-wise smooth cdf() and it
-serves only as a visual aid.</p>
-</li>
-</ul>
-<h2 id="examples">Examples</h2>
-<p>TODO</p></div>
+<p><code>transform_function = target_ppf(source_cdf(x))</code>
+<code>inverse_transform = source_ppf(target_cdf(x))</code></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1236,553 +1820,67 @@ serves only as a visual aid.</p>
 <pre><code class="python">class Redistributor(TransformerMixin):
     &#34;&#34;&#34;
     An algorithm for automatic transformation of data from arbitrary
-    distribution into arbitrary distribution. Source distribution
-    can be known beforehandand or learned from the data. Transformation
-    is piecewise smooth, monotonic and invertible.
+    distribution into arbitrary distribution. Source and target distributions
+    can be known beforehandand or learned from the data using
+    LearnedDistribution class. Transformation is piecewise linear, monotonic
+    and invertible.
 
     Implemented as a Scikit-learn transformer. Can be fitted on 1D vector
-    (for more dimensions use Redistributor_multi wrapper) and saved to be used
-    later for transforming other data assuming the same source distribution.
+    and saved to be used later for transforming other data assuming the same
+    source distribution.
 
-    Uses source&#39;s and target&#39;s cdf() and ppf() to infer the
+    Uses source&#39;s and target&#39;s `cdf()` and `ppf()` to infer the
     transform and inverse transform functions.
 
-    transform_function = target_ppf(source_cdf(x))
-    inverse_transform = source_ppf(target_cdf(x))
-
-    Time complexity
-    --------
-    This algorithm can scale to a large number of samples &gt; 1e08.
-    Algorithm can be sped up by:
-    1. Turning off input data validation by setting validate_input=False
-    2. Choosing target distribution with fast cdf and ppf functions.
-    3. Specifying the source distribution if it is known.
-
-    Parameters
-    --------
-    target: obj, optional, default scipy.stats.norm(loc=0, scale=1)
-        Class specifying the target distribution. Must implement
-        cdf(), ppf() and ideally pdf() methods.
-        Continuous distributions from scipy.stats can be used.
-
-    known_distribution: obj, optional, default None
-        Object specifying the source distribution when known.
-        Must implement cdf(), ppf() and ideally pdf() methods.
-        Continuous distributions from scipy.stats can be used.
-
-    bbox: tuple, optional, default None
-        Tuple (a, b) which represent the lower and upper boundary
-        of the source distribution&#39;s domain.
-
-    closed_interval: bool, optional, default True
-        If True, the values set in bounding box are included into
-        the interpolation range.
-
-    prevent_same: bool, optional, default True
-        Flag, specifyig whether to prevent same values in the
-        interpolated vector.
-
-    tinity: int, default 1e06
-        Specifies divisor of noise added to vectors with same elements.
-        Bigger the tinity, smaller the noise.
-
-    validate_input: bool, optional, default True
-        Flag specifying if the input data should be validated.
-        Turn off to save computation time. Output is undefined
-        if the data are not valid.
-
-    bins: int, optional, default 0
-        Number of bins which are used to infer the latice density
-        when the distribution is learned. Irelevant with known_distribution.
-
-        If bins = x.size, then latice density = 100%. The interpolation step =
-        x.size // bins = 1. This is most precise. If x.size is big enough,
-        we can lower the latice density and the fit will remain very precise.
-
-        If bins = 0, it is set automatically. The latice density = 100%
-        is then used up to x.size = 5000. If x.size &gt; 5000, bins = 5000.
-
-    Attributes
-    --------
-    self.target_cdf: callable, default scipy.stats.norm(loc=0, scale=1).cdf
-        Cummulative Density Function of target distribution.
-
-    self.target_ppf: callable, default scipy.stats.norm(loc=0, scale=1).ppf
-        Percent Point Function (inverse of cdf) of target distribution.
-
-    self.source_cdf: callable, default None
-        Either known_distribution.cdf function of source distribution
-        or learned on fit() by interpolation on latice.
-
-    self.source_ppf: callable, default None
-        Either known_distribution.ppf function of source distribution
-        or learned on fit() by interpolation on latice.
-
-    self.a: float, default None
-        Beginning of the interval of the source distribution domain.
-
-    self.b: float, default None
-        End of the interval of the source distribution domain.
-
-    self.n: int, default None
-        Size of the training data extened by bounding box borders if necessary.
-
-    self.fitted: bool, default False
-        Flag that specifies whether the fit() was already called.
-
-    Limitations
-    --------
-    - Output is undefined when most of the data points have the exact
-      same value, therefore data should not be sparse - multiple zeros etc.
-      Handles small amounts of the exact same values by adding tiny noise.
-
-    - Plotting of learned pdf() is just a smoothed approximation obtained
-      by 1st derivative of the learned piece-wise smooth cdf() and it
-      serves only as a visual aid.
-
-    Examples
-    --------
-    TODO
-
+    `transform_function = target_ppf(source_cdf(x))`
+    `inverse_transform = source_ppf(target_cdf(x))`
     &#34;&#34;&#34;
 
-    def __init__(self,
-                 target=norm(loc=0, scale=1),
-                 known_distribution=None,
-                 bbox=None,
-                 closed_interval=True,
-                 prevent_same=True,
-                 tinity=int(1e06),
-                 validate_input=True,
-                 bins=0):
+    def __init__(self, source, target):
+        self.source = source
+        self.target = target
 
-        self.known_distribution = known_distribution
-        self.bbox = bbox
-        self.closed_interval = closed_interval
-        self.prevent_same = prevent_same
-        self.tinity = tinity
-        self.validate_input = validate_input
-
-        self.bins = bins  # Might chang on fit()
-        self.target_cdf = target.cdf
-        self.target_ppf = target.ppf
-
-        # Will be computed or changed on fit()
-        self.source_cdf = None
-        self.source_ppf = None
-        self.a = None
-        self.b = None
-        self.n = None
-        self.fitted = False
-
-        if self.known_distribution is not None:
-            self.fit()
-
-    def fit(self, x=None):
+    def fit(x=None, y=None):
         &#34;&#34;&#34;
-        Calls all necessary methods to infer cdf and ppf of the source
-        distribution. Source distribution can be either specified directly by
-        its function or learned from the training data on a closed or opened
-        interval. Learning approximates the cdf and ppf by interpolating on a
-        latice which density is infered from bins.
-
-        Parameters
-        --------
-
-        x: 1D numpy array, optional, default None
-            Training data from which the source distribution is learned.
-            Must be specified if self.known_distribution is None.
+        Redistributor does not need to be fitted.
         &#34;&#34;&#34;
-
-        if self.known_distribution is not None:
-            assert self.bbox is not None, \
-                &#39;Bounding box must be specified when using known_distrubition.&#39;
-            self._infer_a_b(x, self.bbox)
-            try:
-                self.source_cdf = self.known_distribution.cdf
-                self.source_ppf = self.known_distribution.ppf
-            except AttributeError:
-                print(&#39;&#39;&#39;Class known_distribution must implement cdf(), ppf()
-                and ideally pdf() methods.&#39;&#39;&#39;, file=sys.stderr)
-                raise
-            try:
-                self.source_pdf = self.known_distribution.pdf
-            except AttributeError:
-                self.source_pdf = None
-            self.known_distribution = self.known_distribution
-        else:
-            assert x is not None, \
-                &#39;If known_distribution is None, X must be specified.&#39;
-
-            # Calculate bounding box
-            self._infer_a_b(x, self.bbox)
-
-            # Validate input data
-            if self.validate_input:
-                self._validate_input(x)
-
-            # Compute number of bins to use
-            self._infer_nbins(x.size, self.bins)
-
-            # Ensure, that a and b values are in x
-            x = self._enforce_borders(x, self.closed_interval)
-
-            # Get the size of x with borders a and b
-            self.n = x.size
-
-            # Learn the source distribution
-            self._infer_cdf_ppf(x, self.prevent_same)
-
-        self.fitted = True
-        return self
+        pass
 
     def transform(self, x):
         &#34;&#34;&#34;
-        Applies learned transformation function to the data x.
-
-        Parameters
-        --------
-        x : numpy array
-            Data to transform. Must be within self.a, self.b interval.
-
-        Returns
-        --------
-        Numpy array of transformed data.
+        Transform the data from source to target distribution.
         &#34;&#34;&#34;
-
-        if self.validate_input:
-            self._validate_input(x)
-        return self.target_ppf(self.source_cdf(x))
+        return self.target.ppf(self.source.cdf(x))
 
     def inverse_transform(self, x):
         &#34;&#34;&#34;
-        Applies learned inverse transform function to the data x.
-
-        Parameters
-        --------
-        x : numpy array
-            Data to inverse transform. Must be within the interp. interval.
-            of learned transform function.
-
-        Returns
-        --------
-        Numpy array of inverse transformed data.
+        Inverse transform the data from target to source distribution.
         &#34;&#34;&#34;
+        return self.source.ppf(self.target.cdf(x))
 
-        return self.source_ppf(self.target_cdf(x))
-
-    def _validate_input(self, data):
+    def kstest(self, n=20):
         &#34;&#34;&#34;
-        Validation of the input data used to validate inputs to fit() and
-        transform(). Can be turned off globally by setting
-        self.validate_input = False.
-
-        Parameters
-        --------
-        data: numpy array of data to be validated
+        Performs the (one-sample or two-sample) Kolmogorov-Smirnov test.
         &#34;&#34;&#34;
-        assert data.dtype == np.float64 or data.dtype == np.float32, \
-            &#39;Data must be float64 of 32.&#39;
-        assert data.ndim == 1, \
-            &#39;Data must be stored in 1D numpy array. You can use data.ravel().&#39;
-        assert all(np.isfinite(data)), \
-            &#39;Data must not contain np.nan or np.inf.&#39;
-        assert self.a &lt;= np.min(data) and np.max(data) &lt;= self.b, \
-            &#39;Data out of interval set by bbox.&#39;
+        from scipy.stats import kstest
+        return kstest(self.source.rvs, self.target.cdf, N=n,
+                      alternative=&#39;two-sided&#39;, mode=&#39;auto&#39;)
 
-    def _infer_a_b(self, data, bbox):
+    def plot_transform_function(self, bins=1000, newfig=True, figsize=(16, 5)):
         &#34;&#34;&#34;
-        Infers self.a and self.b which represent the lower and upper boundary
-        of the source distribution&#39;s domain.
-
-        Parameters
-        --------
-        data: numpy array or None
-            Training data used to infer the a and b automaticaly by taking min
-            and max. Can&#39;t be None if the bbox is None.
-
-        bbox: tuple or None
-            Tuple (a, b) which represent the lower and upper boundary
-            of the source distribution&#39;s domain.
-        &#34;&#34;&#34;
-
-        if bbox is None:
-            bbox = (np.min(data), np.max(data))
-        assert len(bbox) == 2, \
-            &#39;Please specify just two values in bbox.&#39;
-        assert bbox[0] &lt; bbox[1], \
-            &#39;First element of bbox must be smaller than the second.&#39;
-        self.a = bbox[0]
-        self.b = bbox[1]
-
-    def _enforce_borders(self, x, closed_interval):
-        &#34;&#34;&#34;
-        Inserts self.a and self.b into the array x on the first and last
-        positions respectively. If closed_interval=True, the values are
-        extended by small amount, so the actual values a and b are still
-        included in the interpolation range.
-
-        Parameters
-        --------
-        x: numpy array
-            1D vector into which the values are inserted.
-
-        closed_interval: bool
-            Flag, specifying the opened or closed interval.
-        &#34;&#34;&#34;
-        xmin = np.min(x)
-        xmax = np.max(x)
-        extend = (xmax - xmin) / x.size / 100 if closed_interval else 0
-        if xmin != self.a - extend:
-            x = np.insert(x, 0, self.a - extend)
-        if xmax != self.b + extend:
-            x = np.append(x, self.b + extend)
-        return x
-
-    def _infer_nbins(self, n, bins):
-        &#34;&#34;&#34;
-        Infers or validates the number of bins.
-
-        Parameters
-        --------
-        n: int
-            Size of the training data.
-
-        bins:
-            User specified value of bins.
-        &#34;&#34;&#34;
-        if bins == 0:
-            bins = min(n, 5000)
-        assert bins &gt; 2 and bins &lt;= n
-        self.bins = bins
-
-    def _prevent_same(self, x):
-        &#34;&#34;&#34;
-        Adds tiny noise to prevent same values in a vector if there are any.
-
-        Parameters
-        --------
-        x: 1D numpy array
-            Array with potential of having not unique elements.
-
-        Returns
-        --------
-        Sorted array with added small noise based on self.tinity. The aim is
-        to have all elements in the array unique.
-        &#34;&#34;&#34;
-        s = np.array(list(set(x)))
-        if x.size != len(s):
-
-            # Find the smallest distance between two consecutive elements
-            mindist = np.abs(np.min(np.ediff1d(s))) if len(s) &gt; 1 else 1
-
-            # Add tiny noise that is smaller than the smalledst distance
-            tiny_noise = np.random.rand(x.size) * (mindist / self.tinity)
-            x += tiny_noise
-            x = np.sort(x)
-
-            # Recursion for handling extremely rare case that there
-            # are still some elements that are not unique
-            return self._prevent_same(x)
-        else:
-            return x
-
-    def _infer_cdf_ppf(self, x, prevent_same):
-        &#34;&#34;&#34;
-        Learning of the target distribution is done by linear interpolation
-        on a latice. This method infers approximation of source&#39;s
-        Cumulative distribution function and Percent point function.
-
-        Parameters
-        --------
-        x: numpy array
-            1D vector used for the interpolation.
-        prevent_same: bool
-            Flag, specifying whether to add small noise to values on the
-            latice so the interpolation data do not have the exact same values.
-            Applied only if there are some.
-        &#34;&#34;&#34;
-
-        # Define latice on which to interpolate, more points = bigger precision
-        latice = np.linspace(0, self.n - 1, self.bins).astype(int)
-
-        # Get values of x on latice points by partial sort
-        x.partition(latice)
-        values_on_latice = np.sort(x[latice])
-
-        # Adds tiny noise to prevent same values if necessary
-        # Leave first and last values untouched to retain bbox
-        if prevent_same:
-            values_on_latice[1:-1] = self._prevent_same(values_on_latice[1:-1])
-
-        # Normalize the latice by nubmer of samples
-        # Cummulative density function must sum up to 1
-        latice = latice / (self.n - 1)
-
-        # Interpolate to get cdf and ppf
-        from scipy.interpolate import interp1d
-        self.source_cdf = interp1d(values_on_latice, latice, kind=&#39;linear&#39;)
-        self.source_ppf = interp1d(latice, values_on_latice, kind=&#39;linear&#39;)
-
-    def compute_empirical_cdf_error(self, x, error_func=&#39;mse&#39;):
-        &#34;&#34;&#34;
-        Computes error caused by approximation of transform function.
-        Error computation needs to sort all data. It can take a long time
-        for big arrays.
-
-        Parameters
-        --------
-        x: numpy array
-            1D vector of transformed data.
-        error_func: callable or one of {&#39;mae&#39;, &#39;mse&#39;}
-            Callable that computes error on two vectors.
-            &#39;mae&#39; = Error in L1 norm (Mean Absolute Error)
-            &#39;mse&#39; = Error in L2 norm (Mean Squared Error)
-
-        Returns
-        --------
-        Float value of specified error or return value of callable.
-        &#34;&#34;&#34;
-
-        if error_func == &#39;mse&#39;:
-            from sklearn.metrics import mean_squared_error as errfunc
-        elif error_func == &#39;mae&#39;:
-            from sklearn.metrics import mean_absolute_error as errfunc
-        else:
-            errfunc = error_func
-            assert callable(errfunc), \
-                &#39;Set error_func to &#34;mse&#34;, &#34;mae&#34; or func that computes error.&#39;
-
-        transformed = self.transform(x)
-        transformed = np.sort(transformed)
-        n = transformed.size
-        p_lower = self.target_cdf(transformed[0])
-        p_upper = self.target_cdf(transformed[-1])
-        v = p_lower + ((p_upper - p_lower) / (n - 1)) * np.arange(0, n)
-        w = self.target_cdf(transformed)
-        return errfunc(v, w)
-
-    def plot_transform_function(self, figsize=(15, 2)):
-        &#34;&#34;&#34;
-        Displays matplotlib plot of the fitted transform function.
-
-        Parameters
-        --------
-        figsize : tuple (width, height), optional, default (15,2)
-            Desired size of the figure.
-        &#34;&#34;&#34;
-        assert self.fitted, &#39;First, the object must be fitted using fit().&#39;
-
-        x_axis = np.linspace(self.a, self.b, 1000)
-        transformed = self.transform(x_axis)
-
-        import matplotlib.pyplot as plt
-        plt.figure(figsize=figsize)
-        plt.plot(x_axis, transformed)
-        plt.title(&#39;Learned monotonic piecewise smooth transform function&#39;)
-        plt.xlim(self.a, self.b)
-        plt.show()
-        plt.close()
-
-    def plot_source_pdf(self, smoothed=True, figsize=(15, 2)):
-        &#34;&#34;&#34;
-        Displays matplotlib plot of the learned source probability density
-        function.
-
-        Parameters
-        --------
-        smoothed: boolean, optional, default True
-            Applies savgol_filter to smooth the curve that is disturbed by
-            derivatives at bin transitions.
-
-        figsize : tuple (width, height), optional, default (15,2)
-            Desired size of the figure.
-        &#34;&#34;&#34;
-        assert self.fitted, &#39;First, the object must be fitted using fit().&#39;
-
-        steps = 1000
-        step = (self.b - self.a) / steps
-
-        x_axis = np.linspace(self.a, self.b, steps, endpoint=False)
-        x_axis = x_axis[1:]
-
-        if self.known_distribution:
-            if self.source_pdf is not None:
-                curve = self.source_pdf(x_axis)
-                title = &#39;Pdf of known distribution.&#39;
-                text = None
-            else:
-                print(&#39;&#39;&#39;Can&#39;t plot source pdf. Class of known distribution
-                does not implement pdf().&#39;&#39;&#39;, file=sys.stderr)
-                return
-        else:
-            from scipy.misc import derivative
-            curve = derivative(self.source_cdf, x_axis, dx=step / 2)
-            sm = &#39;&#39;
-            if smoothed:
-                from scipy.signal import savgol_filter
-                win_width = steps // 16
-                if win_width % 2 == 0:
-                    win_width += 1
-                curve = savgol_filter(curve, win_width, 1)
-                sm = &#39; (smoothed)&#39;
-            title = &#39;Source_pdf{} approximated using {} bins.&#39;.format(
-                sm, self.bins)
-            text = &#39;&#39;&#39;\nMay not show appropriate results with certain source
-             distributions. In which case rather plot a histogram of your train
-             data.&#39;&#39;&#39;
-
-        import matplotlib.pyplot as plt
-        plt.figure(figsize=figsize)
-        plt.plot(x_axis, curve)
-        plt.title(title)
-        plt.xlim(self.a, self.b)
-        plt.ylim((0., 1.2 * np.max(curve)))
-        if text is not None:
-            ax = plt.gca()
-            plt.text(0.5, -0.4,
-                     text,
-                     size=10,
-                     ha=&#39;center&#39;,
-                     va=&#39;bottom&#39;,
-                     transform=ax.transAxes)
-        plt.show()
-        plt.close()
-
-    def plot_hist(self, data, nbins=None, title=&#39;Histogram&#39;,
-                  figsize=(15, 2), xlim=None):
-        &#34;&#34;&#34;
-        Displays matplotlib histogram of the specified data and nbins.
-
-        Parameters
-        --------
-        data : numpy array
-            Specifying the position of data points on x axis.
-
-        nbins : int, optional, default self.bins
-            Specifying the number of bins of the histogram.
-            If None, the number will be automatically set by matplotlib.
-
-        title : str, optional, default &#39;Histogram&#39;
-            Title of the plot.
-
-        figsize : tuple (width, height), optional, default (15,2)
-            Desired size of the figure.
-
-        xlim : float, optional, default None
-            Limit of x axis.
+        Plotting the learned transformation from source to target.
         &#34;&#34;&#34;
         import matplotlib.pyplot as plt
-        plt.figure(figsize=figsize)
-        if self.known_distribution is None:
-            if nbins is None and self.n &gt; 2500:
-                nbins = min(self.bins, 301)
-        if xlim is not None:
-            plt.xlim(xlim)
-        plt.hist(data, nbins)
-        plt.title(title)
-        plt.show()
-        plt.close()</code></pre>
+        x = np.linspace(*self.source._get_support(), bins)
+        t = self.transform(x)
+        if newfig:
+            plt.figure(figsize=figsize)
+        plt.title(&#39;Transform function&#39;)
+        plt.plot(x, t)
+        if newfig:
+            plt.show()
+            plt.close()
+        return</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1790,1098 +1888,177 @@ serves only as a visual aid.</p>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="redistributor.Redistributor.compute_empirical_cdf_error"><code class="name flex">
-<span>def <span class="ident">compute_empirical_cdf_error</span></span>(<span>self, x, error_func='mse')</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Computes error caused by approximation of transform function.
-Error computation needs to sort all data. It can take a long time
-for big arrays.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>numpy array</code></dt>
-<dd>1D vector of transformed data.</dd>
-<dt><strong><code>error_func</code></strong> :&ensp;<code>callable</code> or <code>one</code> of <code>{'mae', 'mse'}</code></dt>
-<dd>Callable that computes error on two vectors.
-'mae' = Error in L1 norm (Mean Absolute Error)
-'mse' = Error in L2 norm (Mean Squared Error)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>Float value of specified error or return value of callable.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def compute_empirical_cdf_error(self, x, error_func=&#39;mse&#39;):
-    &#34;&#34;&#34;
-    Computes error caused by approximation of transform function.
-    Error computation needs to sort all data. It can take a long time
-    for big arrays.
-
-    Parameters
-    --------
-    x: numpy array
-        1D vector of transformed data.
-    error_func: callable or one of {&#39;mae&#39;, &#39;mse&#39;}
-        Callable that computes error on two vectors.
-        &#39;mae&#39; = Error in L1 norm (Mean Absolute Error)
-        &#39;mse&#39; = Error in L2 norm (Mean Squared Error)
-
-    Returns
-    --------
-    Float value of specified error or return value of callable.
-    &#34;&#34;&#34;
-
-    if error_func == &#39;mse&#39;:
-        from sklearn.metrics import mean_squared_error as errfunc
-    elif error_func == &#39;mae&#39;:
-        from sklearn.metrics import mean_absolute_error as errfunc
-    else:
-        errfunc = error_func
-        assert callable(errfunc), \
-            &#39;Set error_func to &#34;mse&#34;, &#34;mae&#34; or func that computes error.&#39;
-
-    transformed = self.transform(x)
-    transformed = np.sort(transformed)
-    n = transformed.size
-    p_lower = self.target_cdf(transformed[0])
-    p_upper = self.target_cdf(transformed[-1])
-    v = p_lower + ((p_upper - p_lower) / (n - 1)) * np.arange(0, n)
-    w = self.target_cdf(transformed)
-    return errfunc(v, w)</code></pre>
-</details>
-</dd>
 <dt id="redistributor.Redistributor.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, x=None)</span>
+<span>def <span class="ident">fit</span></span>(<span>x=None, y=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Calls all necessary methods to infer cdf and ppf of the source
-distribution. Source distribution can be either specified directly by
-its function or learned from the training data on a closed or opened
-interval. Learning approximates the cdf and ppf by interpolating on a
-latice which density is infered from bins.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>1D numpy array</code>, optional, default <code>None</code></dt>
-<dd>Training data from which the source distribution is learned.
-Must be specified if self.known_distribution is None.</dd>
-</dl></div>
+<div class="desc"><p>Redistributor does not need to be fitted.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, x=None):
+<pre><code class="python">def fit(x=None, y=None):
     &#34;&#34;&#34;
-    Calls all necessary methods to infer cdf and ppf of the source
-    distribution. Source distribution can be either specified directly by
-    its function or learned from the training data on a closed or opened
-    interval. Learning approximates the cdf and ppf by interpolating on a
-    latice which density is infered from bins.
-
-    Parameters
-    --------
-
-    x: 1D numpy array, optional, default None
-        Training data from which the source distribution is learned.
-        Must be specified if self.known_distribution is None.
+    Redistributor does not need to be fitted.
     &#34;&#34;&#34;
-
-    if self.known_distribution is not None:
-        assert self.bbox is not None, \
-            &#39;Bounding box must be specified when using known_distrubition.&#39;
-        self._infer_a_b(x, self.bbox)
-        try:
-            self.source_cdf = self.known_distribution.cdf
-            self.source_ppf = self.known_distribution.ppf
-        except AttributeError:
-            print(&#39;&#39;&#39;Class known_distribution must implement cdf(), ppf()
-            and ideally pdf() methods.&#39;&#39;&#39;, file=sys.stderr)
-            raise
-        try:
-            self.source_pdf = self.known_distribution.pdf
-        except AttributeError:
-            self.source_pdf = None
-        self.known_distribution = self.known_distribution
-    else:
-        assert x is not None, \
-            &#39;If known_distribution is None, X must be specified.&#39;
-
-        # Calculate bounding box
-        self._infer_a_b(x, self.bbox)
-
-        # Validate input data
-        if self.validate_input:
-            self._validate_input(x)
-
-        # Compute number of bins to use
-        self._infer_nbins(x.size, self.bins)
-
-        # Ensure, that a and b values are in x
-        x = self._enforce_borders(x, self.closed_interval)
-
-        # Get the size of x with borders a and b
-        self.n = x.size
-
-        # Learn the source distribution
-        self._infer_cdf_ppf(x, self.prevent_same)
-
-    self.fitted = True
-    return self</code></pre>
+    pass</code></pre>
 </details>
 </dd>
 <dt id="redistributor.Redistributor.inverse_transform"><code class="name flex">
 <span>def <span class="ident">inverse_transform</span></span>(<span>self, x)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Applies learned inverse transform function to the data x.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>numpy array</code></dt>
-<dd>Data to inverse transform. Must be within the interp. interval.
-of learned transform function.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>Numpy array of inverse transformed data.</p></div>
+<div class="desc"><p>Inverse transform the data from target to source distribution.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def inverse_transform(self, x):
     &#34;&#34;&#34;
-    Applies learned inverse transform function to the data x.
-
-    Parameters
-    --------
-    x : numpy array
-        Data to inverse transform. Must be within the interp. interval.
-        of learned transform function.
-
-    Returns
-    --------
-    Numpy array of inverse transformed data.
+    Inverse transform the data from target to source distribution.
     &#34;&#34;&#34;
-
-    return self.source_ppf(self.target_cdf(x))</code></pre>
+    return self.source.ppf(self.target.cdf(x))</code></pre>
 </details>
 </dd>
-<dt id="redistributor.Redistributor.plot_hist"><code class="name flex">
-<span>def <span class="ident">plot_hist</span></span>(<span>self, data, nbins=None, title='Histogram', figsize=(15, 2), xlim=None)</span>
+<dt id="redistributor.Redistributor.kstest"><code class="name flex">
+<span>def <span class="ident">kstest</span></span>(<span>self, n=20)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Displays matplotlib histogram of the specified data and nbins.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>data</code></strong> :&ensp;<code>numpy array</code></dt>
-<dd>Specifying the position of data points on x axis.</dd>
-<dt><strong><code>nbins</code></strong> :&ensp;<code>int</code>, optional, default <code>self.bins</code></dt>
-<dd>Specifying the number of bins of the histogram.
-If None, the number will be automatically set by matplotlib.</dd>
-<dt><strong><code>title</code></strong> :&ensp;<code>str</code>, optional, default <code>'Histogram'</code></dt>
-<dd>Title of the plot.</dd>
-<dt><strong><code>figsize</code></strong> :&ensp;<code>tuple (width, height)</code>, optional, default <code>(15,2)</code></dt>
-<dd>Desired size of the figure.</dd>
-<dt><strong><code>xlim</code></strong> :&ensp;<code>float</code>, optional, default <code>None</code></dt>
-<dd>Limit of x axis.</dd>
-</dl></div>
+<div class="desc"><p>Performs the (one-sample or two-sample) Kolmogorov-Smirnov test.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_hist(self, data, nbins=None, title=&#39;Histogram&#39;,
-              figsize=(15, 2), xlim=None):
+<pre><code class="python">def kstest(self, n=20):
     &#34;&#34;&#34;
-    Displays matplotlib histogram of the specified data and nbins.
-
-    Parameters
-    --------
-    data : numpy array
-        Specifying the position of data points on x axis.
-
-    nbins : int, optional, default self.bins
-        Specifying the number of bins of the histogram.
-        If None, the number will be automatically set by matplotlib.
-
-    title : str, optional, default &#39;Histogram&#39;
-        Title of the plot.
-
-    figsize : tuple (width, height), optional, default (15,2)
-        Desired size of the figure.
-
-    xlim : float, optional, default None
-        Limit of x axis.
+    Performs the (one-sample or two-sample) Kolmogorov-Smirnov test.
     &#34;&#34;&#34;
-    import matplotlib.pyplot as plt
-    plt.figure(figsize=figsize)
-    if self.known_distribution is None:
-        if nbins is None and self.n &gt; 2500:
-            nbins = min(self.bins, 301)
-    if xlim is not None:
-        plt.xlim(xlim)
-    plt.hist(data, nbins)
-    plt.title(title)
-    plt.show()
-    plt.close()</code></pre>
-</details>
-</dd>
-<dt id="redistributor.Redistributor.plot_source_pdf"><code class="name flex">
-<span>def <span class="ident">plot_source_pdf</span></span>(<span>self, smoothed=True, figsize=(15, 2))</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Displays matplotlib plot of the learned source probability density
-function.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>smoothed</code></strong> :&ensp;<code>boolean</code>, optional, default <code>True</code></dt>
-<dd>Applies savgol_filter to smooth the curve that is disturbed by
-derivatives at bin transitions.</dd>
-<dt><strong><code>figsize</code></strong> :&ensp;<code>tuple (width, height)</code>, optional, default <code>(15,2)</code></dt>
-<dd>Desired size of the figure.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def plot_source_pdf(self, smoothed=True, figsize=(15, 2)):
-    &#34;&#34;&#34;
-    Displays matplotlib plot of the learned source probability density
-    function.
-
-    Parameters
-    --------
-    smoothed: boolean, optional, default True
-        Applies savgol_filter to smooth the curve that is disturbed by
-        derivatives at bin transitions.
-
-    figsize : tuple (width, height), optional, default (15,2)
-        Desired size of the figure.
-    &#34;&#34;&#34;
-    assert self.fitted, &#39;First, the object must be fitted using fit().&#39;
-
-    steps = 1000
-    step = (self.b - self.a) / steps
-
-    x_axis = np.linspace(self.a, self.b, steps, endpoint=False)
-    x_axis = x_axis[1:]
-
-    if self.known_distribution:
-        if self.source_pdf is not None:
-            curve = self.source_pdf(x_axis)
-            title = &#39;Pdf of known distribution.&#39;
-            text = None
-        else:
-            print(&#39;&#39;&#39;Can&#39;t plot source pdf. Class of known distribution
-            does not implement pdf().&#39;&#39;&#39;, file=sys.stderr)
-            return
-    else:
-        from scipy.misc import derivative
-        curve = derivative(self.source_cdf, x_axis, dx=step / 2)
-        sm = &#39;&#39;
-        if smoothed:
-            from scipy.signal import savgol_filter
-            win_width = steps // 16
-            if win_width % 2 == 0:
-                win_width += 1
-            curve = savgol_filter(curve, win_width, 1)
-            sm = &#39; (smoothed)&#39;
-        title = &#39;Source_pdf{} approximated using {} bins.&#39;.format(
-            sm, self.bins)
-        text = &#39;&#39;&#39;\nMay not show appropriate results with certain source
-         distributions. In which case rather plot a histogram of your train
-         data.&#39;&#39;&#39;
-
-    import matplotlib.pyplot as plt
-    plt.figure(figsize=figsize)
-    plt.plot(x_axis, curve)
-    plt.title(title)
-    plt.xlim(self.a, self.b)
-    plt.ylim((0., 1.2 * np.max(curve)))
-    if text is not None:
-        ax = plt.gca()
-        plt.text(0.5, -0.4,
-                 text,
-                 size=10,
-                 ha=&#39;center&#39;,
-                 va=&#39;bottom&#39;,
-                 transform=ax.transAxes)
-    plt.show()
-    plt.close()</code></pre>
+    from scipy.stats import kstest
+    return kstest(self.source.rvs, self.target.cdf, N=n,
+                  alternative=&#39;two-sided&#39;, mode=&#39;auto&#39;)</code></pre>
 </details>
 </dd>
 <dt id="redistributor.Redistributor.plot_transform_function"><code class="name flex">
-<span>def <span class="ident">plot_transform_function</span></span>(<span>self, figsize=(15, 2))</span>
+<span>def <span class="ident">plot_transform_function</span></span>(<span>self, bins=1000, newfig=True, figsize=(16, 5))</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Displays matplotlib plot of the fitted transform function.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>figsize</code></strong> :&ensp;<code>tuple (width, height)</code>, optional, default <code>(15,2)</code></dt>
-<dd>Desired size of the figure.</dd>
-</dl></div>
+<div class="desc"><p>Plotting the learned transformation from source to target.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_transform_function(self, figsize=(15, 2)):
+<pre><code class="python">def plot_transform_function(self, bins=1000, newfig=True, figsize=(16, 5)):
     &#34;&#34;&#34;
-    Displays matplotlib plot of the fitted transform function.
-
-    Parameters
-    --------
-    figsize : tuple (width, height), optional, default (15,2)
-        Desired size of the figure.
+    Plotting the learned transformation from source to target.
     &#34;&#34;&#34;
-    assert self.fitted, &#39;First, the object must be fitted using fit().&#39;
-
-    x_axis = np.linspace(self.a, self.b, 1000)
-    transformed = self.transform(x_axis)
-
     import matplotlib.pyplot as plt
-    plt.figure(figsize=figsize)
-    plt.plot(x_axis, transformed)
-    plt.title(&#39;Learned monotonic piecewise smooth transform function&#39;)
-    plt.xlim(self.a, self.b)
-    plt.show()
-    plt.close()</code></pre>
+    x = np.linspace(*self.source._get_support(), bins)
+    t = self.transform(x)
+    if newfig:
+        plt.figure(figsize=figsize)
+    plt.title(&#39;Transform function&#39;)
+    plt.plot(x, t)
+    if newfig:
+        plt.show()
+        plt.close()
+    return</code></pre>
 </details>
 </dd>
 <dt id="redistributor.Redistributor.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, x)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Applies learned transformation function to the data x.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>numpy array</code></dt>
-<dd>Data to transform. Must be within self.a, self.b interval.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>Numpy array of transformed data.</p></div>
+<div class="desc"><p>Transform the data from source to target distribution.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def transform(self, x):
     &#34;&#34;&#34;
-    Applies learned transformation function to the data x.
-
-    Parameters
-    --------
-    x : numpy array
-        Data to transform. Must be within self.a, self.b interval.
-
-    Returns
-    --------
-    Numpy array of transformed data.
+    Transform the data from source to target distribution.
     &#34;&#34;&#34;
-
-    if self.validate_input:
-        self._validate_input(x)
-    return self.target_ppf(self.source_cdf(x))</code></pre>
+    return self.target.ppf(self.source.cdf(x))</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
-<dt id="redistributor.Redistributor_multi"><code class="flex name class">
-<span>class <span class="ident">Redistributor_multi</span></span>
-<span>(</span><span>redistributors, nsub, cpus=0)</span>
+<dt id="redistributor.interp1d_with_warning"><code class="flex name class">
+<span>class <span class="ident">interp1d_with_warning</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Multi-dimensional wrapper for Redistributor.
-Allows to use multiple Redistributors on equal-sized slices (submatrices)
-of N-dimensional input array. Utilizes parallel processing with low memory
-footprint.</p>
-<h2 id="parameters">Parameters:</h2>
-<p>redistributors: numpy array of Redistributor objects
-Objects that will be used to operate on the data within each slice
-defined by nsub. Shape must be the same as nsub.</p>
-<p>nsub: tuple of int
-Tuple specifying how to split multidimensional input
-into submatrices. Corresponding redistributor object will
-be applied on each submatrix separately. Each int
-specifies to how many equal submatrices corresponding
-axis should be split. There must be exactly one int
-for each axis of multidimensional input data.</p>
-<p>cpus: int &gt;= 0
-Number of cpu cores to use in multiprocessing.
-If 0, all cores will be used.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class Redistributor_multi():
-    &#34;&#34;&#34;
-    Multi-dimensional wrapper for Redistributor.
-    Allows to use multiple Redistributors on equal-sized slices (submatrices)
-    of N-dimensional input array. Utilizes parallel processing with low memory
-    footprint.
-
-    Parameters:
-    --------
-
-    redistributors: numpy array of Redistributor objects
-        Objects that will be used to operate on the data within each slice
-        defined by nsub. Shape must be the same as nsub.
-
-    nsub: tuple of int
-        Tuple specifying how to split multidimensional input
-        into submatrices. Corresponding redistributor object will
-        be applied on each submatrix separately. Each int
-        specifies to how many equal submatrices corresponding
-        axis should be split. There must be exactly one int
-        for each axis of multidimensional input data.
-
-    cpus: int &gt;= 0
-        Number of cpu cores to use in multiprocessing.
-        If 0, all cores will be used.
-    &#34;&#34;&#34;
-
-    def __init__(self, redistributors, nsub, cpus=0):
-        self.nsub = np.array(nsub)
-        if np.prod(self.nsub == 1):
-            print(&#39;&#39;&#39;WARNING: Using Redistributor_multi on whole matrix is
-                slower than just Redistributor.&#39;&#39;&#39;, file=sys.stderr)
-        self.redistributors = redistributors
-        assert self.redistributors.size == np.prod(
-            self.nsub), &#39;Specify one redistributor per slice.&#39;
-        self.cpus = self._infer_cpus(cpus)
-        self.fitted = False
-
-    def _infer_cpus(self, cpus):
-        &#34;&#34;&#34;
-        Keeps the defined number of cpus or tries to set it to all
-        available cpus if cpus = 0.
-        &#34;&#34;&#34;
-        if cpus == 0:
-            try:
-                from multiprocessing import cpu_count
-                return cpu_count()
-            except NotImplementedError:
-                return 1  # default
-        else:
-            return cpus
-
-    def fit(self, x=None, size_limit=0):
-        &#34;&#34;&#34;
-        Fits all Redistributor objects in self.redistributors.
-
-        Parameters
-        --------
-        x : numpy array, optional, default None
-            Data to fit on. If None, Redistributors must have
-            source set explicitly.
-
-        size_limit : float, optional, default 0
-            Should be 3x smaller than available memory after loading the data
-            in GB. Based on this value, the appropriate size of chunk is
-            infered. If size_limit == 0, the best value is computed
-            automatically.
-        &#34;&#34;&#34;
-        if x is not None:
-            self.x = x
-            self.machinery(&#39;fit&#39;, size_limit=size_limit)
-        self.fitted = True
-
-    def transform(self, x, inplace=True, size_limit=0):
-        &#34;&#34;&#34;
-        Transforms data in x using fitted Redistributors.
-
-        Parameters
-        --------
-        x : numpy array
-            Data to transform.
-
-        inplace : bool, optional, default True
-            Flag specifying whether to change the data in place without
-            keeping the original values stored in x or operate on copy.
-
-        size_limit : float, optional, default 0
-            See docstring of self.fit
-
-        Returns
-        --------
-        Transformed data with same shape as input.
-        &#34;&#34;&#34;
-        self.inplace = inplace
-        self.x = x if self.inplace else x.copy()
-        return self.machinery(&#39;transform&#39;, size_limit=size_limit)
-
-    def inverse_transform(self, x, inplace=True, size_limit=0):
-        &#34;&#34;&#34;
-        Inverse transforms the data in x using fitted Redistributors.
-
-        Parameters
-        --------
-        x : numpy array
-            Data to transform.
-
-        inplace : bool, optional, default True
-            Flag specifying whether to change the data in place without
-            keeping the original values stored in x or operate on copy.
-
-        size_limit : float, optional, default 0
-            See docstring of self.fit
-
-        Returns
-        --------
-        Inverse transformed data with same shape as input.
-        &#34;&#34;&#34;
-        self.inplace = inplace
-        self.x = x if self.inplace else x.copy()
-        return self.machinery(&#39;inverse&#39;, size_limit=size_limit)
-
-    def _locate_subarrays(self, xshape, nsub):
-        &#34;&#34;&#34;
-        Locates subarrays within matrix x according to nsub.
-
-        Returns
-        --------
-        - Numpy array of indices that locate the subarrays within matrix x.
-        - Shape of subarray that would be produced by slicing the matrix.
-        Each subarray is of equal shape.
-        &#34;&#34;&#34;
-
-        nsub = np.array(nsub)
-        shape = np.array(xshape)
-        steps, rems = np.divmod(shape, nsub)
-        assert all(rems == 0), \
-            &#39;Nsub does not divide the x equally on {} axes.&#39;.format(
-                np.nonzero(rems)[0])
-        steps = np.array(shape / nsub).astype(int)
-        output_shape = steps
-
-        subarray_indices = [list(zip(
-            range(0, shape[axis], steps[axis]),
-            range(0 + steps[axis], shape[axis] + steps[axis], steps[axis])))
-            for axis in range(len(nsub))]
-
-        return (np.array(list(itertools.product(*subarray_indices))),
-                output_shape)
-
-    def _indices_to_slices(self, indices):
-        &#34;&#34;&#34;
-        Converts np array of start and stop indices to np array of slices.
-        &#34;&#34;&#34;
-        shape = indices.shape
-        assert shape[-1] in (2, 3), \
-            &#39;indices.shape[-1] must be 2 or 3 for (start, stop, [step]).&#39;
-        indices = indices.reshape(-1, 2)
-        return np.array([slice(*ind) for ind in indices]).reshape(shape[:-1])
-
-    def _get_size_limit(self):
-        &#34;&#34;&#34;
-        Checks available memory and decides on size_limit for
-        self._get_chunksize.
-        &#34;&#34;&#34;
-        try:
-            import psutil
-            size_limit = psutil.virtual_memory().available / 2.2e09
-            if size_limit &lt; 0.1:
-                print(&#39;&#39;&#39;WARNING: It seems you have too low available memory.
-                The speed might be influenced significantly. For optimal speed
-                it is good to have ~2x size_limit of free memory after loading
-                tha data that are being processed. Size_limit for one chunk of
-                sharedctypes array was set to default 0.5GB. Consider using
-                self.cpus = 1.&#39;&#39;&#39;, file=sys.stderr)
-                return 0.5
-            else:
-                return size_limit
-        except:
-            import sys
-            print(&#39;&#39;&#39;WARNING: Unable to obtain the size of available memory.
-            Size_limit for one chunk of sharedctypes array was set to default
-            0.5GB. For optimal speed it is good to have ~2x size_limit of free
-            memory after loading tha data that are being processed.&#39;&#39;&#39;,
-                  file=sys.stderr)
-            return 0.5
-
-    def _get_chunksize(self, size_limit):
-        &#34;&#34;&#34;
-        Returns number of slices that should be in one chunk so the size of
-        chunk is ideally equal to size_limit. Divides all slices to chunks
-        with agreement to self.nsub. The size of chunk will be bigger if it is
-        not possible. No matter the size, it never returns 1, because the whole
-        class looses its meaning. Returns 1 only if the np.prod(self.nsub) == 1
-        which is discouraged.
-
-        Parameters
-        --------
-        size_limit : float
-            Ideal size of one chunk so the sharedctypes array used
-            in multiprocessing pipe in self.machinery is created as fast
-            as possible.
-        &#34;&#34;&#34;
-        all_slices = np.prod(self.nsub)
-        last_best = 1
-        slice_size = self.x.nbytes / all_slices * 1e-09  # in GB
-        for i, n in enumerate(self.nsub):
-            if n == 1:
-                continue
-            returnOne = False if np.prod(self.nsub[i + 1:]) == 1 else True
-            possible_steps_on_axis = np.array(list(reversed(sorted(_divisors(
-                n, returnOne=returnOne, returnX=True)))))
-            slices_in_chunk = possible_steps_on_axis * np.prod(
-                self.nsub[i + 1:])
-            for s in slices_in_chunk:
-                if s * slice_size &lt;= size_limit:
-                    return s
-                last_best = s
-        return last_best
-
-    @staticmethod
-    def init_global_array(array):
-        &#34;&#34;&#34;Initializer of shared array for multiprocessing pool.&#34;&#34;&#34;
-        global arr
-        arr = array
-
-    @staticmethod
-    def populate(args):
-        &#34;&#34;&#34;
-        Static method called by child processes that applies desired
-        function of redistributor on the data from shared matrix on
-        desired location and populates the result back to the shared matrix.
-        &#34;&#34;&#34;
-        index, location, shape, redistributor, purpose, cpus = args
-        if cpus == 1:
-            # Get the access to the global array
-            matrix = arr
-        else:
-            # Get the access to shraed array
-            matrix = np.ctypeslib.as_array(arr)
-
-        # Take the vector from the shared array
-        v = matrix[tuple(location)].ravel()
-
-        if purpose == &#39;fit&#39;:
-            redistributor.fit(v)
-        elif purpose == &#39;transform&#39;:
-            matrix[tuple(location)] = redistributor.transform(v).reshape(shape)
-        elif purpose == &#39;inverse&#39;:
-            matrix[tuple(location)] = redistributor.inverse_transform(
-                v).reshape(shape)
-
-        return index, redistributor
-
-    def machinery(self, purpose, size_limit):
-        &#34;&#34;&#34;
-        Handles locating subarrays and their parallel processing in chunks.
-
-        Parameters
-        --------
-        purpose : one of {&#39;fit&#39;, &#39;transform&#39;, &#39;inverse&#39;}
-            Specifies what should be done with the data.
-
-        size_limit : float
-            Ideal size of one chunk. 0 = automatic.
-        &#34;&#34;&#34;
-
-        # Number of all subarrays that will be used
-        n_subarrays = np.prod(self.nsub)
-
-        # Get subarray locations (list of indices)
-        indices, output_shape = self._locate_subarrays(self.x.shape, self.nsub)
-
-        # Avoiding multiprocessing and the overhead of creating shared_array
-        if self.cpus == 1:
-            locations = self._indices_to_slices(indices).tolist()
-            Redistributor_multi.init_global_array(self.x)
-            list(map(Redistributor_multi.populate,
-                     zip(range(len(locations)),
-                         locations,
-                         itertools.repeat(output_shape),
-                         self.redistributors.ravel(),
-                         itertools.repeat(purpose),
-                         itertools.repeat(self.cpus))))
-
-        # Using pool of child processes running in parallel
-        else:
-            from multiprocessing import Pool
-            from multiprocessing import RawArray
-
-            # Get chunksize for splitting the self.x so creation of
-            # shared_array is faster
-            if size_limit == 0:
-                size_limit = self._get_size_limit()
-            chunksize = self._get_chunksize(size_limit)
-            stepsize = n_subarrays // chunksize
-
-            chunked_indices = indices.reshape(stepsize, -1, len(self.nsub), 2)
-            locations_of_subarrays_within_each_chunk = self._indices_to_slices(
-                chunked_indices[0]).tolist()
-
-            for i, chunks_subarray_indices in enumerate(chunked_indices):
-                # Find start and stop of chunk slice in each axis
-                mins = np.min(chunks_subarray_indices, axis=2)[0]
-                maxs = np.max(chunks_subarray_indices, axis=2)[-1]
-                indices_of_chunk = np.array(list(zip(mins, maxs)))
-                location_of_chunk = self._indices_to_slices(
-                    indices_of_chunk).tolist()
-
-                # Create a shared memory array that is accessible by the
-                # child processes
-                s = self.x[tuple(location_of_chunk)].copy()
-                tmp = np.ctypeslib.as_ctypes(s)
-
-                # Creating a shared array if much faster when the underlying
-                # C code can make a copy of it. If there is not that much
-                # available memory left it replaces value by value in place
-                # which takes significantly more time. That is the reason this
-                # is chunkized into smaller arrays and done in a for loop.
-                shared_array = RawArray(tmp._type_, tmp)
-                del s
-                del tmp
-
-                pool = Pool(processes=self.cpus,
-                            initializer=Redistributor_multi.init_global_array,
-                            initargs=(shared_array, ))
-
-                p = pool.map(Redistributor_multi.populate,
-                             zip(range(i * chunksize, (i + 1) * chunksize),
-                                 locations_of_subarrays_within_each_chunk,
-                                 itertools.repeat(output_shape),
-                                 self.redistributors.ravel(),
-                                 itertools.repeat(purpose),
-                                 itertools.repeat(self.cpus)))
-
-                # Update redistributor objects after being changed
-                [np.put(self.redistributors, i, instance) for i, instance in p]
-
-                pool.close()
-                pool.join()
-
-                if purpose != &#39;fit&#39;:
-                    self.x[tuple(location_of_chunk)] = np.ctypeslib.as_array(
-                        shared_array)
-
-                # Freeing the memory
-                del shared_array
-
-        # Returning the results
-        if purpose == &#39;fit&#39;:
-            output = None
-        else:
-            output = self.x
-
-        # Cleaning up the object
-        del self.x
-        return output</code></pre>
-</details>
-<h3>Static methods</h3>
-<dl>
-<dt id="redistributor.Redistributor_multi.init_global_array"><code class="name flex">
-<span>def <span class="ident">init_global_array</span></span>(<span>array)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Initializer of shared array for multiprocessing pool.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def init_global_array(array):
-    &#34;&#34;&#34;Initializer of shared array for multiprocessing pool.&#34;&#34;&#34;
-    global arr
-    arr = array</code></pre>
-</details>
-</dd>
-<dt id="redistributor.Redistributor_multi.populate"><code class="name flex">
-<span>def <span class="ident">populate</span></span>(<span>args)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Static method called by child processes that applies desired
-function of redistributor on the data from shared matrix on
-desired location and populates the result back to the shared matrix.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def populate(args):
-    &#34;&#34;&#34;
-    Static method called by child processes that applies desired
-    function of redistributor on the data from shared matrix on
-    desired location and populates the result back to the shared matrix.
-    &#34;&#34;&#34;
-    index, location, shape, redistributor, purpose, cpus = args
-    if cpus == 1:
-        # Get the access to the global array
-        matrix = arr
-    else:
-        # Get the access to shraed array
-        matrix = np.ctypeslib.as_array(arr)
-
-    # Take the vector from the shared array
-    v = matrix[tuple(location)].ravel()
-
-    if purpose == &#39;fit&#39;:
-        redistributor.fit(v)
-    elif purpose == &#39;transform&#39;:
-        matrix[tuple(location)] = redistributor.transform(v).reshape(shape)
-    elif purpose == &#39;inverse&#39;:
-        matrix[tuple(location)] = redistributor.inverse_transform(
-            v).reshape(shape)
-
-    return index, redistributor</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="redistributor.Redistributor_multi.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, x=None, size_limit=0)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Fits all Redistributor objects in self.redistributors.</p>
+<div class="desc"><p>By default behaves exactly as scipy.interpolate.interp1d but allows
+the user to specify <code>bounds_error = 'warn'</code> which overrides the
+behaviour of <code>_check_bunds</code> to warn instead of raising an error.</p>
 <h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>numpy array</code>, optional, default <code>None</code></dt>
-<dd>Data to fit on. If None, Redistributors must have
-source set explicitly.</dd>
-<dt><strong><code>size_limit</code></strong> :&ensp;<code>float</code>, optional, default <code>0</code></dt>
-<dd>Should be 3x smaller than available memory after loading the data
-in GB. Based on this value, the appropriate size of chunk is
-infered. If size_limit == 0, the best value is computed
-automatically.</dd>
-</dl></div>
+<p>Accepts all the args and kwargs as scipy.interpolate.interp1d.</p>
+<p>Initialize a 1-D linear interpolation class.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, x=None, size_limit=0):
+<pre><code class="python">class interp1d_with_warning(interp1d):
     &#34;&#34;&#34;
-    Fits all Redistributor objects in self.redistributors.
+    By default behaves exactly as scipy.interpolate.interp1d but allows
+    the user to specify `bounds_error = &#39;warn&#39;` which overrides the
+    behaviour of `_check_bunds` to warn instead of raising an error.
 
     Parameters
-    --------
-    x : numpy array, optional, default None
-        Data to fit on. If None, Redistributors must have
-        source set explicitly.
-
-    size_limit : float, optional, default 0
-        Should be 3x smaller than available memory after loading the data
-        in GB. Based on this value, the appropriate size of chunk is
-        infered. If size_limit == 0, the best value is computed
-        automatically.
+    ----------
+    Accepts all the args and kwargs as scipy.interpolate.interp1d.
     &#34;&#34;&#34;
-    if x is not None:
-        self.x = x
-        self.machinery(&#39;fit&#39;, size_limit=size_limit)
-    self.fitted = True</code></pre>
+
+    def __init__(self, *args, **kwargs):
+        self.warn = False
+        bounds_error = kwargs.get(&#39;bounds_error&#39;)
+        if bounds_error == &#39;warn&#39;:
+            self.warn = True
+            bounds_error = True
+        super().__init__(*args, **kwargs)
+
+    def _check_bounds(self, x_new):
+        &#34;&#34;&#34;
+        Overriding the _check_bounds method of scipy.interpolate.interp1d
+        in order to provide a functionality of warning the user instead of
+        just throwing an error when some value is out of bounds. Even if
+        fill_value is specified a warning can be issued to let the user
+        know it was necessary to use the fill_value and from which side.
+        &#34;&#34;&#34;
+
+        below_bounds = x_new &lt; self.x[0]  # Find values which are bellow bounds
+        above_bounds = x_new &gt; self.x[-1]  # Find values which are above bounds
+
+        msg = (&#34;{} out of {} values in x_new are {} the interpolation &#34;
+               &#34;range. Read the docs of `fill_value` and `bounds_error` &#34;
+               &#34;to manage the behavior.&#34;)
+
+        if below_bounds.any():
+            if self.bounds_error:
+                m = msg.format(below_bounds.sum(), below_bounds.size, &#39;below&#39;)
+                if self.warn:
+                    m += (&#39; Mapping the invalid values to value: &#39;
+                          f&#39;{self._fill_value_below}.&#39;)
+                    warnings.warn(m)
+                else:
+                    raise ValueError(m)
+
+        if above_bounds.any():
+            if self.bounds_error:
+                m = msg.format(above_bounds.sum(), above_bounds.size, &#39;above&#39;)
+                if self.warn:
+                    m += (&#39; Mapping the invalid values to value: &#39;
+                          f&#39;{self._fill_value_above}.&#39;)
+                    warnings.warn(m)
+                else:
+                    raise ValueError(m)
+
+        return below_bounds, above_bounds</code></pre>
 </details>
-</dd>
-<dt id="redistributor.Redistributor_multi.inverse_transform"><code class="name flex">
-<span>def <span class="ident">inverse_transform</span></span>(<span>self, x, inplace=True, size_limit=0)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Inverse transforms the data in x using fitted Redistributors.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>numpy array</code></dt>
-<dd>Data to transform.</dd>
-<dt><strong><code>inplace</code></strong> :&ensp;<code>bool</code>, optional, default <code>True</code></dt>
-<dd>Flag specifying whether to change the data in place without
-keeping the original values stored in x or operate on copy.</dd>
-<dt><strong><code>size_limit</code></strong> :&ensp;<code>float</code>, optional, default <code>0</code></dt>
-<dd>See docstring of self.fit</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>Inverse transformed data with same shape as input.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def inverse_transform(self, x, inplace=True, size_limit=0):
-    &#34;&#34;&#34;
-    Inverse transforms the data in x using fitted Redistributors.
-
-    Parameters
-    --------
-    x : numpy array
-        Data to transform.
-
-    inplace : bool, optional, default True
-        Flag specifying whether to change the data in place without
-        keeping the original values stored in x or operate on copy.
-
-    size_limit : float, optional, default 0
-        See docstring of self.fit
-
-    Returns
-    --------
-    Inverse transformed data with same shape as input.
-    &#34;&#34;&#34;
-    self.inplace = inplace
-    self.x = x if self.inplace else x.copy()
-    return self.machinery(&#39;inverse&#39;, size_limit=size_limit)</code></pre>
-</details>
-</dd>
-<dt id="redistributor.Redistributor_multi.machinery"><code class="name flex">
-<span>def <span class="ident">machinery</span></span>(<span>self, purpose, size_limit)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Handles locating subarrays and their parallel processing in chunks.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>purpose</code></strong> :&ensp;<code>one</code> of <code>{'fit', 'transform', 'inverse'}</code></dt>
-<dd>Specifies what should be done with the data.</dd>
-<dt><strong><code>size_limit</code></strong> :&ensp;<code>float</code></dt>
-<dd>Ideal size of one chunk. 0 = automatic.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def machinery(self, purpose, size_limit):
-    &#34;&#34;&#34;
-    Handles locating subarrays and their parallel processing in chunks.
-
-    Parameters
-    --------
-    purpose : one of {&#39;fit&#39;, &#39;transform&#39;, &#39;inverse&#39;}
-        Specifies what should be done with the data.
-
-    size_limit : float
-        Ideal size of one chunk. 0 = automatic.
-    &#34;&#34;&#34;
-
-    # Number of all subarrays that will be used
-    n_subarrays = np.prod(self.nsub)
-
-    # Get subarray locations (list of indices)
-    indices, output_shape = self._locate_subarrays(self.x.shape, self.nsub)
-
-    # Avoiding multiprocessing and the overhead of creating shared_array
-    if self.cpus == 1:
-        locations = self._indices_to_slices(indices).tolist()
-        Redistributor_multi.init_global_array(self.x)
-        list(map(Redistributor_multi.populate,
-                 zip(range(len(locations)),
-                     locations,
-                     itertools.repeat(output_shape),
-                     self.redistributors.ravel(),
-                     itertools.repeat(purpose),
-                     itertools.repeat(self.cpus))))
-
-    # Using pool of child processes running in parallel
-    else:
-        from multiprocessing import Pool
-        from multiprocessing import RawArray
-
-        # Get chunksize for splitting the self.x so creation of
-        # shared_array is faster
-        if size_limit == 0:
-            size_limit = self._get_size_limit()
-        chunksize = self._get_chunksize(size_limit)
-        stepsize = n_subarrays // chunksize
-
-        chunked_indices = indices.reshape(stepsize, -1, len(self.nsub), 2)
-        locations_of_subarrays_within_each_chunk = self._indices_to_slices(
-            chunked_indices[0]).tolist()
-
-        for i, chunks_subarray_indices in enumerate(chunked_indices):
-            # Find start and stop of chunk slice in each axis
-            mins = np.min(chunks_subarray_indices, axis=2)[0]
-            maxs = np.max(chunks_subarray_indices, axis=2)[-1]
-            indices_of_chunk = np.array(list(zip(mins, maxs)))
-            location_of_chunk = self._indices_to_slices(
-                indices_of_chunk).tolist()
-
-            # Create a shared memory array that is accessible by the
-            # child processes
-            s = self.x[tuple(location_of_chunk)].copy()
-            tmp = np.ctypeslib.as_ctypes(s)
-
-            # Creating a shared array if much faster when the underlying
-            # C code can make a copy of it. If there is not that much
-            # available memory left it replaces value by value in place
-            # which takes significantly more time. That is the reason this
-            # is chunkized into smaller arrays and done in a for loop.
-            shared_array = RawArray(tmp._type_, tmp)
-            del s
-            del tmp
-
-            pool = Pool(processes=self.cpus,
-                        initializer=Redistributor_multi.init_global_array,
-                        initargs=(shared_array, ))
-
-            p = pool.map(Redistributor_multi.populate,
-                         zip(range(i * chunksize, (i + 1) * chunksize),
-                             locations_of_subarrays_within_each_chunk,
-                             itertools.repeat(output_shape),
-                             self.redistributors.ravel(),
-                             itertools.repeat(purpose),
-                             itertools.repeat(self.cpus)))
-
-            # Update redistributor objects after being changed
-            [np.put(self.redistributors, i, instance) for i, instance in p]
-
-            pool.close()
-            pool.join()
-
-            if purpose != &#39;fit&#39;:
-                self.x[tuple(location_of_chunk)] = np.ctypeslib.as_array(
-                    shared_array)
-
-            # Freeing the memory
-            del shared_array
-
-    # Returning the results
-    if purpose == &#39;fit&#39;:
-        output = None
-    else:
-        output = self.x
-
-    # Cleaning up the object
-    del self.x
-    return output</code></pre>
-</details>
-</dd>
-<dt id="redistributor.Redistributor_multi.transform"><code class="name flex">
-<span>def <span class="ident">transform</span></span>(<span>self, x, inplace=True, size_limit=0)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Transforms data in x using fitted Redistributors.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>numpy array</code></dt>
-<dd>Data to transform.</dd>
-<dt><strong><code>inplace</code></strong> :&ensp;<code>bool</code>, optional, default <code>True</code></dt>
-<dd>Flag specifying whether to change the data in place without
-keeping the original values stored in x or operate on copy.</dd>
-<dt><strong><code>size_limit</code></strong> :&ensp;<code>float</code>, optional, default <code>0</code></dt>
-<dd>See docstring of self.fit</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>Transformed data with same shape as input.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def transform(self, x, inplace=True, size_limit=0):
-    &#34;&#34;&#34;
-    Transforms data in x using fitted Redistributors.
-
-    Parameters
-    --------
-    x : numpy array
-        Data to transform.
-
-    inplace : bool, optional, default True
-        Flag specifying whether to change the data in place without
-        keeping the original values stored in x or operate on copy.
-
-    size_limit : float, optional, default 0
-        See docstring of self.fit
-
-    Returns
-    --------
-    Transformed data with same shape as input.
-    &#34;&#34;&#34;
-    self.inplace = inplace
-    self.x = x if self.inplace else x.copy()
-    return self.machinery(&#39;transform&#39;, size_limit=size_limit)</code></pre>
-</details>
-</dd>
-</dl>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>scipy.interpolate.interpolate.interp1d</li>
+<li>scipy.interpolate.polyint._Interpolator1D</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -2897,40 +2074,39 @@ keeping the original values stored in x or operate on copy.</dd>
 <li><a href="#how-to-cite">How to cite</a></li>
 <li><a href="#license">License</a></li>
 <li><a href="#acknowledgement">Acknowledgement</a></li>
-<li><a href="#to-do-list">To do list</a></li>
 </ul>
 </div>
 <ul id="index">
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="redistributor.load_redistributor" href="#redistributor.load_redistributor">load_redistributor</a></code></li>
+<li><code><a title="redistributor.make_unique" href="#redistributor.make_unique">make_unique</a></code></li>
+<li><code><a title="redistributor.plot_cdf_ppf_pdf" href="#redistributor.plot_cdf_ppf_pdf">plot_cdf_ppf_pdf</a></code></li>
 <li><code><a title="redistributor.save_redistributor" href="#redistributor.save_redistributor">save_redistributor</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="redistributor.LearnedDistribution" href="#redistributor.LearnedDistribution">LearnedDistribution</a></code></h4>
+<ul class="">
+<li><code><a title="redistributor.LearnedDistribution.cdf" href="#redistributor.LearnedDistribution.cdf">cdf</a></code></li>
+<li><code><a title="redistributor.LearnedDistribution.ppf" href="#redistributor.LearnedDistribution.ppf">ppf</a></code></li>
+<li><code><a title="redistributor.LearnedDistribution.rvs" href="#redistributor.LearnedDistribution.rvs">rvs</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="redistributor.Redistributor" href="#redistributor.Redistributor">Redistributor</a></code></h4>
 <ul class="">
-<li><code><a title="redistributor.Redistributor.compute_empirical_cdf_error" href="#redistributor.Redistributor.compute_empirical_cdf_error">compute_empirical_cdf_error</a></code></li>
 <li><code><a title="redistributor.Redistributor.fit" href="#redistributor.Redistributor.fit">fit</a></code></li>
 <li><code><a title="redistributor.Redistributor.inverse_transform" href="#redistributor.Redistributor.inverse_transform">inverse_transform</a></code></li>
-<li><code><a title="redistributor.Redistributor.plot_hist" href="#redistributor.Redistributor.plot_hist">plot_hist</a></code></li>
-<li><code><a title="redistributor.Redistributor.plot_source_pdf" href="#redistributor.Redistributor.plot_source_pdf">plot_source_pdf</a></code></li>
+<li><code><a title="redistributor.Redistributor.kstest" href="#redistributor.Redistributor.kstest">kstest</a></code></li>
 <li><code><a title="redistributor.Redistributor.plot_transform_function" href="#redistributor.Redistributor.plot_transform_function">plot_transform_function</a></code></li>
 <li><code><a title="redistributor.Redistributor.transform" href="#redistributor.Redistributor.transform">transform</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="redistributor.Redistributor_multi" href="#redistributor.Redistributor_multi">Redistributor_multi</a></code></h4>
-<ul class="two-column">
-<li><code><a title="redistributor.Redistributor_multi.fit" href="#redistributor.Redistributor_multi.fit">fit</a></code></li>
-<li><code><a title="redistributor.Redistributor_multi.init_global_array" href="#redistributor.Redistributor_multi.init_global_array">init_global_array</a></code></li>
-<li><code><a title="redistributor.Redistributor_multi.inverse_transform" href="#redistributor.Redistributor_multi.inverse_transform">inverse_transform</a></code></li>
-<li><code><a title="redistributor.Redistributor_multi.machinery" href="#redistributor.Redistributor_multi.machinery">machinery</a></code></li>
-<li><code><a title="redistributor.Redistributor_multi.populate" href="#redistributor.Redistributor_multi.populate">populate</a></code></li>
-<li><code><a title="redistributor.Redistributor_multi.transform" href="#redistributor.Redistributor_multi.transform">transform</a></code></li>
-</ul>
+<h4><code><a title="redistributor.interp1d_with_warning" href="#redistributor.interp1d_with_warning">interp1d_with_warning</a></code></h4>
 </li>
 </ul>
 </li>

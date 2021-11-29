@@ -78,13 +78,7 @@ class Redistributor(TransformerMixin):
 
 
 class LearnedDistribution(rv_continuous):
-
-    def __init__(self, x, a=None, b=None, bins=None, keep_x_unchanged=True,
-                 subsample_x=None, ravel_x=True, assume_sorted=False,
-                 fill_value='auto', bounds_error='warn', dupl_method='spread',
-                 seed=None, name='LearnedDistribution', **kwargs):
-
-        """
+    """
         A continuous random variable obtained by estimating the empirical
         distribution of a user provided 1D array of numeric data `x`. It
         can be used to sample new random points from the learned distribution.
@@ -164,7 +158,8 @@ class LearnedDistribution(rv_continuous):
         bounds_error : bool or 'warn', default 'warn'
             See the docstring of class interp1d_with_warning.
 
-        dupl_method : str, one of {'spread', 'cluster'}, default 'spread'
+        dupl_method : str, one of {'keep', 'spread', 'cluster', 'noise'}
+                      default 'spread'
             Method of solving duplicate lattice values. Read more in
             docstring of `make_unique()`.
 
@@ -190,6 +185,12 @@ class LearnedDistribution(rv_continuous):
         ... fill in the rest which is implemented
         ... handle the rest which does not make sense
         """
+
+    def __init__(self, x, a=None, b=None, bins=None, keep_x_unchanged=True,
+                 subsample_x=None, ravel_x=True, assume_sorted=False,
+                 fill_value='auto', bounds_error='warn', dupl_method='spread',
+                 seed=None, name='LearnedDistribution', **kwargs):
+
         super().__init__(name=name, seed=seed, **kwargs)
 
         if ravel_x:
@@ -474,13 +475,16 @@ def plot_cdf_ppf_pdf(dist, a=None, b=None, bins=None,
     """
     Just a convinience function for visualizing the dist
     `cdf`, `ppf` and `pdf` functions.
-    `a`: float
+    
+    Parameters
+    ----------
+    a: float
         Start of the cdf support
-    `b`: float
+    b: float
         End of the cdf support
-    `v`: float
+    v: float
         Start of the ppf support
-    `w`: float
+    w: float
         End of the ppf support
     rows: int, 
         Number of rows in the figure
@@ -533,17 +537,17 @@ def plot_cdf_ppf_pdf(dist, a=None, b=None, bins=None,
 
 
 class interp1d_with_warning(interp1d):
+    """
+    By default behaves exactly as scipy.interpolate.interp1d but allows
+    the user to specify `bounds_error = 'warn'` which overrides the
+    behaviour of `_check_bunds` to warn instead of raising an error.
+
+    Parameters
+    ----------
+    Accepts all the args and kwargs as scipy.interpolate.interp1d.
+    """
 
     def __init__(self, *args, **kwargs):
-        """
-        By default behaves exactly as scipy.interpolate.interp1d but allows
-        the user to specify `bounds_error = 'warn'` which overrides the
-        behaviour of `_check_bunds` to warn instead of raising an error.
-
-        Parameters
-        ----------
-        Accepts all the args and kwargs as scipy.interpolate.interp1d.
-        """
         self.warn = False
         bounds_error = kwargs.get('bounds_error')
         if bounds_error == 'warn':
