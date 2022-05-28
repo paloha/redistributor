@@ -461,13 +461,13 @@ class LearnedDistribution(rv_continuous):
 
 
 def save_redistributor(d, path):
-    """Saves the Redistributor or Redistributor_multi object to a file."""
+    """Saves the Redistributor object to a file."""
     import joblib
     joblib.dump(d, path)
 
 
 def load_redistributor(path):
-    """Loads the Redistributor or Redistributor_multi object from a file."""
+    """Loads the Redistributor object from a file."""
     import joblib
     return joblib.load(path)
 
