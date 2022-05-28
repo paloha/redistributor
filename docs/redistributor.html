@@ -137,7 +137,8 @@ import numpy as np
 from scipy.stats import rv_continuous
 from scipy.interpolate import interp1d
 from sklearn.base import TransformerMixin
-
+from sklearn.neighbors import KernelDensity as ScikitKDE
+from scipy.stats import norm
 
 class Redistributor(TransformerMixin):
     &#34;&#34;&#34;
@@ -357,7 +358,7 @@ class LearnedDistribution(rv_continuous):
     def _get_support(self, *args):
         &#34;&#34;&#34;
         Support of LearnedDistribution does not depend on any scipy arguments,
-        we keep args only to keep the signature unchanged.
+        we keep args only to keep the signature unchanged from super.
 
         The support depends only on whether `a` and/or `b` were specified
         explicitely or as Nones.
@@ -437,7 +438,6 @@ class LearnedDistribution(rv_continuous):
             raise ValueError(f&#39;Bins ({bins}) must be 2 &lt; bins &lt;= x.size&#39;)
 
         return bins
-    
 
     def _get_lattice_and_vals(self, x, keep_x_unchanged):
         &#34;&#34;&#34;
@@ -524,7 +524,8 @@ class LearnedDistribution(rv_continuous):
 
         return interp1d_with_warning(
             lattice_vals, lattice, kind=&#39;linear&#39;, assume_sorted=True,
-            bounds_error=self.bounds_error, fill_value=fill_value)
+            bounds_error=self.bounds_error, fill_value=fill_value, 
+            name=f&#39;{self.name} cdf interpolant&#39;)
 
     def _get_ppf(self, lattice, lattice_vals):
         &#34;&#34;&#34;
@@ -537,7 +538,8 @@ class LearnedDistribution(rv_continuous):
         fill_value = (lattice_vals[0], lattice_vals[-1])
         return interp1d_with_warning(
             lattice, lattice_vals, kind=&#39;linear&#39;, assume_sorted=True,
-            bounds_error=False, fill_value=fill_value)
+            bounds_error=False, fill_value=fill_value, 
+            name=f&#39;{self.name} ppf interpolant&#39;)
 
     def cdf(self, k):
         # We do not need the default argument checking from scipy
@@ -563,7 +565,8 @@ class LearnedDistribution(rv_continuous):
         c = self.cdf(g)  # Evaluated cdf
         dx = 1 / (g[1] - g[0])
         dif = np.round(np.ediff1d(c, to_begin=c[1] - c[0]) * dx, decimals=10)
-        return interp1d_with_warning(g, dif, kind=&#39;linear&#39;, assume_sorted=True)
+        return interp1d_with_warning(g, dif, kind=&#39;linear&#39;, assume_sorted=True, 
+                                     name=f&#39;{self.name} pdf interpolant&#39;)
 
     def _entropy(self, *args):
         &#34;&#34;&#34;
@@ -586,24 +589,24 @@ class LearnedDistribution(rv_continuous):
 
 
 def save_redistributor(d, path):
-    &#34;&#34;&#34;Saves the Redistributor or Redistributor_multi object to a file.&#34;&#34;&#34;
+    &#34;&#34;&#34;Saves the Redistributor object to a file.&#34;&#34;&#34;
     import joblib
     joblib.dump(d, path)
 
 
 def load_redistributor(path):
-    &#34;&#34;&#34;Loads the Redistributor or Redistributor_multi object from a file.&#34;&#34;&#34;
+    &#34;&#34;&#34;Loads the Redistributor object from a file.&#34;&#34;&#34;
     import joblib
     return joblib.load(path)
 
 
 def plot_cdf_ppf_pdf(dist, a=None, b=None, bins=None,
-                     v=None, w=None, rows=1, cols=3, 
+                     v=None, w=None, rows=1, cols=3,
                      figsize=(16, 5)):
     &#34;&#34;&#34;
     Just a convinience function for visualizing the dist
     `cdf`, `ppf` and `pdf` functions.
-    
+
     Parameters
     ----------
     a: float
@@ -614,9 +617,9 @@ def plot_cdf_ppf_pdf(dist, a=None, b=None, bins=None,
         Start of the ppf support
     w: float
         End of the ppf support
-    rows: int, 
+    rows: int,
         Number of rows in the figure
-    cols: int, 
+    cols: int,
         Number of cols in the figure
     figsize: None or tuple
         If None, no new figure is created.
@@ -627,7 +630,12 @@ def plot_cdf_ppf_pdf(dist, a=None, b=None, bins=None,
     if b is None:
         b = dist._get_support()[1]
     if bins is None:
-        bins = dist.bins
+        if hasattr(dist, &#39;bins&#39;):
+            bins = dist.bins
+        elif hasattr(dist, &#39;grid_density&#39;):
+            bins = dist.grid_density
+        else:
+            bins = 1000
 
     if v is None:
         v = dist._get_support_ppf()[0]
@@ -640,27 +648,25 @@ def plot_cdf_ppf_pdf(dist, a=None, b=None, bins=None,
     if figsize is not None:
         plt.figure(figsize=figsize)
         plt.tight_layout()
-        
+
     plt.subplot(rows, cols, 1)
     plt.title(f&#39;{dist.name} CDF&#39;)
     plt.plot(x, dist.cdf(x))
-    
 
     plt.subplot(rows, cols, 2)
     plt.title(f&#39;{dist.name} PPF&#39;)
     plt.plot(y, dist.ppf(y))
-    
 
     plt.subplot(rows, cols, 3)
     plt.title(f&#39;{dist.name} PDF&#39;)
     plt.plot(x, dist.pdf(x))
     plt.ylim(-0.001, None)
-    
+
     if figsize is not None:
         plt.show()
         plt.close()
-        return 
-    else:    
+        return
+    else:
         return plt
 
 
@@ -673,10 +679,12 @@ class interp1d_with_warning(interp1d):
     Parameters
     ----------
     Accepts all the args and kwargs as scipy.interpolate.interp1d.
+    Additionally, 
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
         self.warn = False
+        self.name = kwargs.pop(&#39;name&#39;, &#39;Interp1D&#39;)
         bounds_error = kwargs.get(&#39;bounds_error&#39;)
         if bounds_error == &#39;warn&#39;:
             self.warn = True
@@ -695,13 +703,13 @@ class interp1d_with_warning(interp1d):
         below_bounds = x_new &lt; self.x[0]  # Find values which are bellow bounds
         above_bounds = x_new &gt; self.x[-1]  # Find values which are above bounds
 
-        msg = (&#34;{} out of {} values in x_new are {} the interpolation &#34;
+        msg = (&#34;{}: {} out of {} values in x_new are {} the interpolation &#34;
                &#34;range. Read the docs of `fill_value` and `bounds_error` &#34;
                &#34;to manage the behavior.&#34;)
 
         if below_bounds.any():
             if self.bounds_error:
-                m = msg.format(below_bounds.sum(), below_bounds.size, &#39;below&#39;)
+                m = msg.format(self.name, below_bounds.sum(), below_bounds.size, &#39;below&#39;)
                 if self.warn:
                     m += (&#39; Mapping the invalid values to value: &#39;
                           f&#39;{self._fill_value_below}.&#39;)
@@ -711,7 +719,7 @@ class interp1d_with_warning(interp1d):
 
         if above_bounds.any():
             if self.bounds_error:
-                m = msg.format(above_bounds.sum(), above_bounds.size, &#39;above&#39;)
+                m = msg.format(self.name, above_bounds.sum(), above_bounds.size, &#39;above&#39;)
                 if self.warn:
                     m += (&#39; Mapping the invalid values to value: &#39;
                           f&#39;{self._fill_value_above}.&#39;)
@@ -751,8 +759,17 @@ def make_unique(array, random_state, mode=&#39;spread&#39;, duplicates=None):
     random_state: RandomState
 
     mode: str, one of {&#39;keep&#39;, &#39;spread&#39;, &#39;cluster&#39;, &#39;noise&#39;}
-        Cluster adjusts the values by a tiny amount only.
-        Spread uses all available space between consecutive vals.
+      &#39;keep&#39; produces discontinuous cdf (cdf with vertical jumps)
+          because it just simply keeps the non unique values
+      &#39;spread&#39; is deterministic but slow to compute,
+          it separates the non unique values equidistantly and
+          tries to use all the available space between consecutive values.
+      &#39;cluster&#39; is deterministic and also slow to compute,
+          it separates the non unique values equidistantly but
+          it does only use a small space around the value.
+      &#39;noise&#39; is fast, very similar to &#39;cluster&#39;, but nondeterministic
+          because it involves randomness and it handles min and max values
+          separately to avoid jumping out of the a,b interval.
 
     duplicates: int, number of duplicates in previous iteration.
         Do not use, used only for recursion.
@@ -833,7 +850,7 @@ def make_unique(array, random_state, mode=&#39;spread&#39;, duplicates=None):
 
     # Assuming sorted array
     _min, _max = array[0], array[-1]
-    diff = np.ediff1d(array, to_end=_max)
+    diff = np.ediff1d(array, to_end=np.abs(_max))
     if np.any(diff &lt; 0):
         raise ValueError(&#39;Array must be sorted.&#39;)
 
@@ -886,6 +903,222 @@ def make_unique(array, random_state, mode=&#39;spread&#39;, duplicates=None):
 
         return make_unique(
             np.sort(array), random_state, mode, n_duplicates)
+
+    
+class KernelDensity():
+    &#34;&#34;&#34;
+    Wrapper around KernelDensity for ease of use as a source or 
+    target distribution of Redistributor. It extends the KDE by
+    providing cdf and ppf functions.
+    
+    Only supports 1D input because Redistributor also works only in 1D. 
+    Only supports gaussian kernel. CDF supports two methods, precise and fast.
+    CDF precise is computed using a formula. CDF fast is a linear interpolation
+    of the CDF precise on a grid of specified density. There is no explicit
+    formula for PPF of gaussian mixutre, so here it is approximated using
+    linear interpolation of the CDF precise on a grid of specified density.
+    
+    Parameters
+    ----------
+
+    x : numeric or 1D numpy array
+        1D vector of which the distribution will be estimated.
+        
+    ravel_x : bool, default True
+        KDE requires 1D arrays. So the `x` is by default
+        flattened to 1D using `np.ravel()`.
+        
+    grid_density : int
+        User specified number of grid points on which the CDF is computed 
+        precisely in order to build the interpolants for fast CDF and PPF.
+        The same grid is used for CDF fast and PPF. The user specified
+        value of grid_density is not it&#39;s final value. It is updated
+        during initialization of this object on call of `self._get_ppf()`.
+    
+    cdf_method : str, one of {&#39;precise&#39;, &#39;fast&#39;}
+        Specifies the default method to be used when self.cdf() is called.
+    
+    name : str, default &#39;LearnedDistribution&#39;
+            The name of the instance.
+            
+    kwargs : all other keyword arguments accepted by sklearn.neighbors.KernelDensity.
+    
+    
+    Methods
+    -------
+    
+    pdf : Probability Density Function of a Gaussian Mixture
+    cdf : Cumulative Density Function of a Gaussian Mixture (or its approximation)
+    ppf : Approximation of a Percent Point Function of a Gaussian Mixture
+    rvs : Random sample generator
+    &#34;&#34;&#34;
+    
+    def __init__(self, x, ravel_x=True, grid_density=int(1e4), cdf_method=&#39;fast&#39;, 
+                 name=&#39;KDE&#39;, **kwargs):
+        
+        self.name = name
+        
+        if kwargs.get(&#39;kernel&#39;) not in [None, &#39;gaussian&#39;]:
+            raise ValueError(&#39;Only gaussian kernel is supported in this wrapper.&#39;)
+            
+        # Fitting the KDE
+        x = np.asarray(x)
+        if ravel_x:
+            x = x.ravel()
+        self._validate_shape(x)
+        self.kde = ScikitKDE(**kwargs).fit(x.reshape(-1,1))
+        
+        # Approximation of cdf with linear interpolation
+        self.cdf_method = cdf_method
+        self._cdf_fast = None  # Computed during call of _get_ppf()
+        
+        # Controls the ppf approximation precision
+        if grid_density &lt; 10:  # 10 is already unreasonably small
+            raise ValueError(&#39;Grid density too small.&#39;)
+        self.grid_density = grid_density
+        self._ppf = self._get_ppf()
+        
+    def _validate_shape(self, data):
+        if not data.ndim == 1:
+            raise ValueError(&#39;Input array must be 1D. You can use x.ravel().&#39;)
+            
+    def _get_support(self, *args):
+        return self.a, self.b
+    
+    def _get_support_ppf(self, *args):
+        return self.ppfa, self.ppfb
+    
+    def rvs(self, size=1, random_state=None):
+        &#34;&#34;&#34;
+        Random sample from the estimated distribution.
+        &#34;&#34;&#34;
+        return self.kde.sample(size, random_state).ravel()
+    
+    def pdf(self, x):
+        &#34;&#34;&#34;
+        Probability density function of the estimated distribution.
+        &#34;&#34;&#34;
+        x = np.asarray(x)
+        if x.ndim == 0:
+            x = x.reshape(1)
+        self._validate_shape(x)
+        return np.exp(self.kde.score_samples(x.reshape(-1, 1)))   
+        
+    def cdf(self, k, method=None):
+        &#34;&#34;&#34; 
+        Cummulative density function of the estimated distribution.
+        &#34;&#34;&#34;
+        method = method or self.cdf_method
+        
+        if method == &#39;fast&#39;:
+            fast = self._cdf_fast(k)
+            # Handling out of support k by computing it precisely
+            # out_of_support.sum() gives the number of out_of_support values
+            out_of_support = np.isnan(fast)
+            if out_of_support.any():
+                fast[out_of_support] = self.cdf(k[out_of_support], method=&#39;precise&#39;)
+            return fast
+        
+        elif method == &#39;precise&#39;:
+            data = np.asarray(self.kde.tree_.data)
+            out = 0.0
+            for data_point in data:
+                out += norm.cdf(k, loc=data_point, scale=self.kde.bandwidth)
+            return out / data.size
+        
+        else:
+            raise NotImplementedError(&#39;Method must be one of {&#34;fast&#34;, &#34;precise&#34;}&#39;)
+            
+    def ppf(self, q):
+        &#34;&#34;&#34;
+        This method approximates the ppf based on linear interpolation
+        of the cdf on self.grid_density many points. There is no formula
+        for precise computation of gaussian mixture ppf. Therefore, if
+        we wanted a precise function, we would need to bisect the cdf.
+        Bisecting is very slow in comparison to just computing the cdf
+        on a grid and using the interpolant to approximate the ppf.
+        &#34;&#34;&#34;
+        q = np.asarray(q)
+        if (q &lt; 0).any() or (q &gt; 1).any():
+            raise ValueError(&#39;Value in q out of PPF support (0, 1).&#39;)
+        return self._ppf(q)
+
+    def _get_ppf(self):
+        &#34;&#34;&#34;
+        In order to get a fast ppf function, we will sample
+        the cdf on its support using a grid of desired density.
+        Then we create an interpolant which maps the values
+        inversly, thus getting an approximation to a ppf func.
+        
+        Theoretically, ppf(0), ppf(1) must map to -inf, +inf.
+        We can not interpolate to infinite values, therefore,
+        for the ppf range, we pick the closest finite values 
+        from the grid. Everything outside will be set to ±inf.
+        
+        This way we obtain a precise enough interpolant which
+        also maps the 0 and 1 to ±inf. 
+        &#34;&#34;&#34;
+
+        def argvalid(arr):
+            &#34;&#34;&#34;
+            Returns 2-tuple of indices `first` and `last`
+            which can be used to slice `arr` to get only
+            valid values (0+ε &lt; valid &lt; 1-ε). Function assumes
+            `arr` is sorted and finite. ε is a multiple of 
+            the tiniest number which can be represented in 
+            float64. In theory ε could be 0, but we get
+            numerical instabilities when interpolating later.
+            If all values from left side are valid, first = 0.
+            If all values from right side are valid, last = None.
+            &#34;&#34;&#34;
+            v = arr &gt; 0 #10 * np.finfo(np.float64).tiny
+            w = arr &lt; 1 #- 10 * np.finfo(np.float64).tiny
+            first = v.size - v.sum()
+            last = w.sum() - w.size
+            last = None if last == 0 else last
+            return first, last
+        
+        # Computing the empirical range of the ppf
+        # Bandwidth * 39 is just an empirical distance from the mean 
+        # of a gaussian which maps to 0 due to floating point precision.
+        # Therefore a, b is just a bit bigger than an empirical
+        # ppf range (or cdf support).
+        
+        # Approximate a, b
+        a = np.min(self.kde.tree_.data) - self.kde.bandwidth * 39
+        b = np.max(self.kde.tree_.data) + self.kde.bandwidth * 39
+        
+        # Since a, b is a bit bigger than the cdf support
+        # a few of the first cdfx values will all map to 0
+        # and a few of the last cdfx values will all map to 1.
+        # We have to remove those duplicate gridpoints
+        # to properly define our interpolant (from cdf to ppf).
+        cdfx = np.linspace(a, b, self.grid_density)  # grid
+        cdfy = self.cdf(cdfx, method=&#39;precise&#39;)
+        first, last = argvalid(cdfy)
+        
+        if np.nansum(np.abs(np.array([first, last], dtype=float)))  == cdfy.size:
+            raise ValueError(&#39;All grid points between a, b are invalid.&#39;)
+            
+        # Final x, y
+        cdfx = cdfx[first:last]
+        cdfy = cdfy[first:last]
+        
+        # New valid a, b (support of the cdf)
+        self.a, self.b = cdfx[0], cdfx[-1]
+        
+        # Support of the ppf
+        self.ppfa, self.ppfb = cdfy[0], cdfy[-1]
+        
+        # Real grid density (some of the points might have been excluded as invalid)
+        self.grid_density = cdfx.size
+        
+        # Since the cdf is already evaluated, we can also just store it
+        # to use it for fast cdf approximation (self.cdf(method=&#39;fast&#39;)
+        self._cdf_fast = interp1d(cdfx, cdfy, bounds_error=False,
+                                  fill_value=(np.nan))
+        
+        return interp1d(cdfy, cdfx, bounds_error=False, fill_value=(-np.inf, np.inf))
     </code></pre>
 </details>
 </section>
@@ -900,13 +1133,13 @@ def make_unique(array, random_state, mode=&#39;spread&#39;, duplicates=None):
 <span>def <span class="ident">load_redistributor</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Loads the Redistributor or Redistributor_multi object from a file.</p></div>
+<div class="desc"><p>Loads the Redistributor object from a file.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def load_redistributor(path):
-    &#34;&#34;&#34;Loads the Redistributor or Redistributor_multi object from a file.&#34;&#34;&#34;
+    &#34;&#34;&#34;Loads the Redistributor object from a file.&#34;&#34;&#34;
     import joblib
     return joblib.load(path)</code></pre>
 </details>
@@ -935,9 +1168,19 @@ failure and warns the user (should be rare).</p>
 <dt><strong><code>random_state</code></strong> :&ensp;<code>RandomState</code></dt>
 <dd>&nbsp;</dd>
 <dt><strong><code>mode</code></strong> :&ensp;<code>str, one</code> of <code>{'keep', 'spread', 'cluster', 'noise'}</code></dt>
-<dd>Cluster adjusts the values by a tiny amount only.
-Spread uses all available space between consecutive vals.</dd>
+<dd>&nbsp;</dd>
 </dl>
+<p>'keep' produces discontinuous cdf (cdf with vertical jumps)
+because it just simply keeps the non unique values
+'spread' is deterministic but slow to compute,
+it separates the non unique values equidistantly and
+tries to use all the available space between consecutive values.
+'cluster' is deterministic and also slow to compute,
+it separates the non unique values equidistantly but
+it does only use a small space around the value.
+'noise' is fast, very similar to 'cluster', but nondeterministic
+because it involves randomness and it handles min and max values
+separately to avoid jumping out of the a,b interval.</p>
 <p>duplicates: int, number of duplicates in previous iteration.
 Do not use, used only for recursion.</p>
 <h2 id="returns">Returns</h2>
@@ -975,8 +1218,17 @@ Do not use, used only for recursion.</p>
     random_state: RandomState
 
     mode: str, one of {&#39;keep&#39;, &#39;spread&#39;, &#39;cluster&#39;, &#39;noise&#39;}
-        Cluster adjusts the values by a tiny amount only.
-        Spread uses all available space between consecutive vals.
+      &#39;keep&#39; produces discontinuous cdf (cdf with vertical jumps)
+          because it just simply keeps the non unique values
+      &#39;spread&#39; is deterministic but slow to compute,
+          it separates the non unique values equidistantly and
+          tries to use all the available space between consecutive values.
+      &#39;cluster&#39; is deterministic and also slow to compute,
+          it separates the non unique values equidistantly but
+          it does only use a small space around the value.
+      &#39;noise&#39; is fast, very similar to &#39;cluster&#39;, but nondeterministic
+          because it involves randomness and it handles min and max values
+          separately to avoid jumping out of the a,b interval.
 
     duplicates: int, number of duplicates in previous iteration.
         Do not use, used only for recursion.
@@ -1057,7 +1309,7 @@ Do not use, used only for recursion.</p>
 
     # Assuming sorted array
     _min, _max = array[0], array[-1]
-    diff = np.ediff1d(array, to_end=_max)
+    diff = np.ediff1d(array, to_end=np.abs(_max))
     if np.any(diff &lt; 0):
         raise ValueError(&#39;Array must be sorted.&#39;)
 
@@ -1128,9 +1380,9 @@ Do not use, used only for recursion.</p>
 <dd>Start of the ppf support</dd>
 <dt><strong><code>w</code></strong> :&ensp;<code>float</code></dt>
 <dd>End of the ppf support</dd>
-<dt><strong><code>rows</code></strong> :&ensp;<code>int, </code></dt>
+<dt><strong><code>rows</code></strong> :&ensp;<code>int,</code></dt>
 <dd>Number of rows in the figure</dd>
-<dt><strong><code>cols</code></strong> :&ensp;<code>int, </code></dt>
+<dt><strong><code>cols</code></strong> :&ensp;<code>int,</code></dt>
 <dd>Number of cols in the figure</dd>
 <dt><strong><code>figsize</code></strong> :&ensp;<code>None</code> or <code>tuple</code></dt>
 <dd>If None, no new figure is created.</dd>
@@ -1140,12 +1392,12 @@ Do not use, used only for recursion.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def plot_cdf_ppf_pdf(dist, a=None, b=None, bins=None,
-                     v=None, w=None, rows=1, cols=3, 
+                     v=None, w=None, rows=1, cols=3,
                      figsize=(16, 5)):
     &#34;&#34;&#34;
     Just a convinience function for visualizing the dist
     `cdf`, `ppf` and `pdf` functions.
-    
+
     Parameters
     ----------
     a: float
@@ -1156,9 +1408,9 @@ Do not use, used only for recursion.</p>
         Start of the ppf support
     w: float
         End of the ppf support
-    rows: int, 
+    rows: int,
         Number of rows in the figure
-    cols: int, 
+    cols: int,
         Number of cols in the figure
     figsize: None or tuple
         If None, no new figure is created.
@@ -1169,7 +1421,12 @@ Do not use, used only for recursion.</p>
     if b is None:
         b = dist._get_support()[1]
     if bins is None:
-        bins = dist.bins
+        if hasattr(dist, &#39;bins&#39;):
+            bins = dist.bins
+        elif hasattr(dist, &#39;grid_density&#39;):
+            bins = dist.grid_density
+        else:
+            bins = 1000
 
     if v is None:
         v = dist._get_support_ppf()[0]
@@ -1182,27 +1439,25 @@ Do not use, used only for recursion.</p>
     if figsize is not None:
         plt.figure(figsize=figsize)
         plt.tight_layout()
-        
+
     plt.subplot(rows, cols, 1)
     plt.title(f&#39;{dist.name} CDF&#39;)
     plt.plot(x, dist.cdf(x))
-    
 
     plt.subplot(rows, cols, 2)
     plt.title(f&#39;{dist.name} PPF&#39;)
     plt.plot(y, dist.ppf(y))
-    
 
     plt.subplot(rows, cols, 3)
     plt.title(f&#39;{dist.name} PDF&#39;)
     plt.plot(x, dist.pdf(x))
     plt.ylim(-0.001, None)
-    
+
     if figsize is not None:
         plt.show()
         plt.close()
-        return 
-    else:    
+        return
+    else:
         return plt</code></pre>
 </details>
 </dd>
@@ -1210,13 +1465,13 @@ Do not use, used only for recursion.</p>
 <span>def <span class="ident">save_redistributor</span></span>(<span>d, path)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Saves the Redistributor or Redistributor_multi object to a file.</p></div>
+<div class="desc"><p>Saves the Redistributor object to a file.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def save_redistributor(d, path):
-    &#34;&#34;&#34;Saves the Redistributor or Redistributor_multi object to a file.&#34;&#34;&#34;
+    &#34;&#34;&#34;Saves the Redistributor object to a file.&#34;&#34;&#34;
     import joblib
     joblib.dump(d, path)</code></pre>
 </details>
@@ -1226,6 +1481,367 @@ Do not use, used only for recursion.</p>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="redistributor.KernelDensity"><code class="flex name class">
+<span>class <span class="ident">KernelDensity</span></span>
+<span>(</span><span>x, ravel_x=True, grid_density=10000, cdf_method='fast', name='KDE', **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Wrapper around KernelDensity for ease of use as a source or
+target distribution of Redistributor. It extends the KDE by
+providing cdf and ppf functions.</p>
+<p>Only supports 1D input because Redistributor also works only in 1D.
+Only supports gaussian kernel. CDF supports two methods, precise and fast.
+CDF precise is computed using a formula. CDF fast is a linear interpolation
+of the CDF precise on a grid of specified density. There is no explicit
+formula for PPF of gaussian mixutre, so here it is approximated using
+linear interpolation of the CDF precise on a grid of specified density.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>numeric</code> or <code>1D numpy array</code></dt>
+<dd>1D vector of which the distribution will be estimated.</dd>
+<dt><strong><code>ravel_x</code></strong> :&ensp;<code>bool</code>, default <code>True</code></dt>
+<dd>KDE requires 1D arrays. So the <code>x</code> is by default
+flattened to 1D using <code>np.ravel()</code>.</dd>
+<dt><strong><code>grid_density</code></strong> :&ensp;<code>int</code></dt>
+<dd>User specified number of grid points on which the CDF is computed
+precisely in order to build the interpolants for fast CDF and PPF.
+The same grid is used for CDF fast and PPF. The user specified
+value of grid_density is not it's final value. It is updated
+during initialization of this object on call of <code>self._get_ppf()</code>.</dd>
+<dt><strong><code>cdf_method</code></strong> :&ensp;<code>str, one</code> of <code>{'precise', 'fast'}</code></dt>
+<dd>Specifies the default method to be used when self.cdf() is called.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code>, default <code>'LearnedDistribution'</code></dt>
+<dd>The name of the instance.</dd>
+</dl>
+<p>kwargs : all other keyword arguments accepted by sklearn.neighbors.KernelDensity.</p>
+<h2 id="methods">Methods</h2>
+<p>pdf : Probability Density Function of a Gaussian Mixture
+cdf : Cumulative Density Function of a Gaussian Mixture (or its approximation)
+ppf : Approximation of a Percent Point Function of a Gaussian Mixture
+rvs : Random sample generator</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class KernelDensity():
+    &#34;&#34;&#34;
+    Wrapper around KernelDensity for ease of use as a source or 
+    target distribution of Redistributor. It extends the KDE by
+    providing cdf and ppf functions.
+    
+    Only supports 1D input because Redistributor also works only in 1D. 
+    Only supports gaussian kernel. CDF supports two methods, precise and fast.
+    CDF precise is computed using a formula. CDF fast is a linear interpolation
+    of the CDF precise on a grid of specified density. There is no explicit
+    formula for PPF of gaussian mixutre, so here it is approximated using
+    linear interpolation of the CDF precise on a grid of specified density.
+    
+    Parameters
+    ----------
+
+    x : numeric or 1D numpy array
+        1D vector of which the distribution will be estimated.
+        
+    ravel_x : bool, default True
+        KDE requires 1D arrays. So the `x` is by default
+        flattened to 1D using `np.ravel()`.
+        
+    grid_density : int
+        User specified number of grid points on which the CDF is computed 
+        precisely in order to build the interpolants for fast CDF and PPF.
+        The same grid is used for CDF fast and PPF. The user specified
+        value of grid_density is not it&#39;s final value. It is updated
+        during initialization of this object on call of `self._get_ppf()`.
+    
+    cdf_method : str, one of {&#39;precise&#39;, &#39;fast&#39;}
+        Specifies the default method to be used when self.cdf() is called.
+    
+    name : str, default &#39;LearnedDistribution&#39;
+            The name of the instance.
+            
+    kwargs : all other keyword arguments accepted by sklearn.neighbors.KernelDensity.
+    
+    
+    Methods
+    -------
+    
+    pdf : Probability Density Function of a Gaussian Mixture
+    cdf : Cumulative Density Function of a Gaussian Mixture (or its approximation)
+    ppf : Approximation of a Percent Point Function of a Gaussian Mixture
+    rvs : Random sample generator
+    &#34;&#34;&#34;
+    
+    def __init__(self, x, ravel_x=True, grid_density=int(1e4), cdf_method=&#39;fast&#39;, 
+                 name=&#39;KDE&#39;, **kwargs):
+        
+        self.name = name
+        
+        if kwargs.get(&#39;kernel&#39;) not in [None, &#39;gaussian&#39;]:
+            raise ValueError(&#39;Only gaussian kernel is supported in this wrapper.&#39;)
+            
+        # Fitting the KDE
+        x = np.asarray(x)
+        if ravel_x:
+            x = x.ravel()
+        self._validate_shape(x)
+        self.kde = ScikitKDE(**kwargs).fit(x.reshape(-1,1))
+        
+        # Approximation of cdf with linear interpolation
+        self.cdf_method = cdf_method
+        self._cdf_fast = None  # Computed during call of _get_ppf()
+        
+        # Controls the ppf approximation precision
+        if grid_density &lt; 10:  # 10 is already unreasonably small
+            raise ValueError(&#39;Grid density too small.&#39;)
+        self.grid_density = grid_density
+        self._ppf = self._get_ppf()
+        
+    def _validate_shape(self, data):
+        if not data.ndim == 1:
+            raise ValueError(&#39;Input array must be 1D. You can use x.ravel().&#39;)
+            
+    def _get_support(self, *args):
+        return self.a, self.b
+    
+    def _get_support_ppf(self, *args):
+        return self.ppfa, self.ppfb
+    
+    def rvs(self, size=1, random_state=None):
+        &#34;&#34;&#34;
+        Random sample from the estimated distribution.
+        &#34;&#34;&#34;
+        return self.kde.sample(size, random_state).ravel()
+    
+    def pdf(self, x):
+        &#34;&#34;&#34;
+        Probability density function of the estimated distribution.
+        &#34;&#34;&#34;
+        x = np.asarray(x)
+        if x.ndim == 0:
+            x = x.reshape(1)
+        self._validate_shape(x)
+        return np.exp(self.kde.score_samples(x.reshape(-1, 1)))   
+        
+    def cdf(self, k, method=None):
+        &#34;&#34;&#34; 
+        Cummulative density function of the estimated distribution.
+        &#34;&#34;&#34;
+        method = method or self.cdf_method
+        
+        if method == &#39;fast&#39;:
+            fast = self._cdf_fast(k)
+            # Handling out of support k by computing it precisely
+            # out_of_support.sum() gives the number of out_of_support values
+            out_of_support = np.isnan(fast)
+            if out_of_support.any():
+                fast[out_of_support] = self.cdf(k[out_of_support], method=&#39;precise&#39;)
+            return fast
+        
+        elif method == &#39;precise&#39;:
+            data = np.asarray(self.kde.tree_.data)
+            out = 0.0
+            for data_point in data:
+                out += norm.cdf(k, loc=data_point, scale=self.kde.bandwidth)
+            return out / data.size
+        
+        else:
+            raise NotImplementedError(&#39;Method must be one of {&#34;fast&#34;, &#34;precise&#34;}&#39;)
+            
+    def ppf(self, q):
+        &#34;&#34;&#34;
+        This method approximates the ppf based on linear interpolation
+        of the cdf on self.grid_density many points. There is no formula
+        for precise computation of gaussian mixture ppf. Therefore, if
+        we wanted a precise function, we would need to bisect the cdf.
+        Bisecting is very slow in comparison to just computing the cdf
+        on a grid and using the interpolant to approximate the ppf.
+        &#34;&#34;&#34;
+        q = np.asarray(q)
+        if (q &lt; 0).any() or (q &gt; 1).any():
+            raise ValueError(&#39;Value in q out of PPF support (0, 1).&#39;)
+        return self._ppf(q)
+
+    def _get_ppf(self):
+        &#34;&#34;&#34;
+        In order to get a fast ppf function, we will sample
+        the cdf on its support using a grid of desired density.
+        Then we create an interpolant which maps the values
+        inversly, thus getting an approximation to a ppf func.
+        
+        Theoretically, ppf(0), ppf(1) must map to -inf, +inf.
+        We can not interpolate to infinite values, therefore,
+        for the ppf range, we pick the closest finite values 
+        from the grid. Everything outside will be set to ±inf.
+        
+        This way we obtain a precise enough interpolant which
+        also maps the 0 and 1 to ±inf. 
+        &#34;&#34;&#34;
+
+        def argvalid(arr):
+            &#34;&#34;&#34;
+            Returns 2-tuple of indices `first` and `last`
+            which can be used to slice `arr` to get only
+            valid values (0+ε &lt; valid &lt; 1-ε). Function assumes
+            `arr` is sorted and finite. ε is a multiple of 
+            the tiniest number which can be represented in 
+            float64. In theory ε could be 0, but we get
+            numerical instabilities when interpolating later.
+            If all values from left side are valid, first = 0.
+            If all values from right side are valid, last = None.
+            &#34;&#34;&#34;
+            v = arr &gt; 0 #10 * np.finfo(np.float64).tiny
+            w = arr &lt; 1 #- 10 * np.finfo(np.float64).tiny
+            first = v.size - v.sum()
+            last = w.sum() - w.size
+            last = None if last == 0 else last
+            return first, last
+        
+        # Computing the empirical range of the ppf
+        # Bandwidth * 39 is just an empirical distance from the mean 
+        # of a gaussian which maps to 0 due to floating point precision.
+        # Therefore a, b is just a bit bigger than an empirical
+        # ppf range (or cdf support).
+        
+        # Approximate a, b
+        a = np.min(self.kde.tree_.data) - self.kde.bandwidth * 39
+        b = np.max(self.kde.tree_.data) + self.kde.bandwidth * 39
+        
+        # Since a, b is a bit bigger than the cdf support
+        # a few of the first cdfx values will all map to 0
+        # and a few of the last cdfx values will all map to 1.
+        # We have to remove those duplicate gridpoints
+        # to properly define our interpolant (from cdf to ppf).
+        cdfx = np.linspace(a, b, self.grid_density)  # grid
+        cdfy = self.cdf(cdfx, method=&#39;precise&#39;)
+        first, last = argvalid(cdfy)
+        
+        if np.nansum(np.abs(np.array([first, last], dtype=float)))  == cdfy.size:
+            raise ValueError(&#39;All grid points between a, b are invalid.&#39;)
+            
+        # Final x, y
+        cdfx = cdfx[first:last]
+        cdfy = cdfy[first:last]
+        
+        # New valid a, b (support of the cdf)
+        self.a, self.b = cdfx[0], cdfx[-1]
+        
+        # Support of the ppf
+        self.ppfa, self.ppfb = cdfy[0], cdfy[-1]
+        
+        # Real grid density (some of the points might have been excluded as invalid)
+        self.grid_density = cdfx.size
+        
+        # Since the cdf is already evaluated, we can also just store it
+        # to use it for fast cdf approximation (self.cdf(method=&#39;fast&#39;)
+        self._cdf_fast = interp1d(cdfx, cdfy, bounds_error=False,
+                                  fill_value=(np.nan))
+        
+        return interp1d(cdfy, cdfx, bounds_error=False, fill_value=(-np.inf, np.inf))</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="redistributor.KernelDensity.cdf"><code class="name flex">
+<span>def <span class="ident">cdf</span></span>(<span>self, k, method=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Cummulative density function of the estimated distribution.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cdf(self, k, method=None):
+    &#34;&#34;&#34; 
+    Cummulative density function of the estimated distribution.
+    &#34;&#34;&#34;
+    method = method or self.cdf_method
+    
+    if method == &#39;fast&#39;:
+        fast = self._cdf_fast(k)
+        # Handling out of support k by computing it precisely
+        # out_of_support.sum() gives the number of out_of_support values
+        out_of_support = np.isnan(fast)
+        if out_of_support.any():
+            fast[out_of_support] = self.cdf(k[out_of_support], method=&#39;precise&#39;)
+        return fast
+    
+    elif method == &#39;precise&#39;:
+        data = np.asarray(self.kde.tree_.data)
+        out = 0.0
+        for data_point in data:
+            out += norm.cdf(k, loc=data_point, scale=self.kde.bandwidth)
+        return out / data.size
+    
+    else:
+        raise NotImplementedError(&#39;Method must be one of {&#34;fast&#34;, &#34;precise&#34;}&#39;)</code></pre>
+</details>
+</dd>
+<dt id="redistributor.KernelDensity.pdf"><code class="name flex">
+<span>def <span class="ident">pdf</span></span>(<span>self, x)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Probability density function of the estimated distribution.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pdf(self, x):
+    &#34;&#34;&#34;
+    Probability density function of the estimated distribution.
+    &#34;&#34;&#34;
+    x = np.asarray(x)
+    if x.ndim == 0:
+        x = x.reshape(1)
+    self._validate_shape(x)
+    return np.exp(self.kde.score_samples(x.reshape(-1, 1)))   </code></pre>
+</details>
+</dd>
+<dt id="redistributor.KernelDensity.ppf"><code class="name flex">
+<span>def <span class="ident">ppf</span></span>(<span>self, q)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This method approximates the ppf based on linear interpolation
+of the cdf on self.grid_density many points. There is no formula
+for precise computation of gaussian mixture ppf. Therefore, if
+we wanted a precise function, we would need to bisect the cdf.
+Bisecting is very slow in comparison to just computing the cdf
+on a grid and using the interpolant to approximate the ppf.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ppf(self, q):
+    &#34;&#34;&#34;
+    This method approximates the ppf based on linear interpolation
+    of the cdf on self.grid_density many points. There is no formula
+    for precise computation of gaussian mixture ppf. Therefore, if
+    we wanted a precise function, we would need to bisect the cdf.
+    Bisecting is very slow in comparison to just computing the cdf
+    on a grid and using the interpolant to approximate the ppf.
+    &#34;&#34;&#34;
+    q = np.asarray(q)
+    if (q &lt; 0).any() or (q &gt; 1).any():
+        raise ValueError(&#39;Value in q out of PPF support (0, 1).&#39;)
+    return self._ppf(q)</code></pre>
+</details>
+</dd>
+<dt id="redistributor.KernelDensity.rvs"><code class="name flex">
+<span>def <span class="ident">rvs</span></span>(<span>self, size=1, random_state=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Random sample from the estimated distribution.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def rvs(self, size=1, random_state=None):
+    &#34;&#34;&#34;
+    Random sample from the estimated distribution.
+    &#34;&#34;&#34;
+    return self.kde.sample(size, random_state).ravel()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="redistributor.LearnedDistribution"><code class="flex name class">
 <span>class <span class="ident">LearnedDistribution</span></span>
 <span>(</span><span>x, a=None, b=None, bins=None, keep_x_unchanged=True, subsample_x=None, ravel_x=True, assume_sorted=False, fill_value='auto', bounds_error='warn', dupl_method='spread', seed=None, name='LearnedDistribution', **kwargs)</span>
@@ -1470,7 +2086,7 @@ entropy
     def _get_support(self, *args):
         &#34;&#34;&#34;
         Support of LearnedDistribution does not depend on any scipy arguments,
-        we keep args only to keep the signature unchanged.
+        we keep args only to keep the signature unchanged from super.
 
         The support depends only on whether `a` and/or `b` were specified
         explicitely or as Nones.
@@ -1550,7 +2166,6 @@ entropy
             raise ValueError(f&#39;Bins ({bins}) must be 2 &lt; bins &lt;= x.size&#39;)
 
         return bins
-    
 
     def _get_lattice_and_vals(self, x, keep_x_unchanged):
         &#34;&#34;&#34;
@@ -1637,7 +2252,8 @@ entropy
 
         return interp1d_with_warning(
             lattice_vals, lattice, kind=&#39;linear&#39;, assume_sorted=True,
-            bounds_error=self.bounds_error, fill_value=fill_value)
+            bounds_error=self.bounds_error, fill_value=fill_value, 
+            name=f&#39;{self.name} cdf interpolant&#39;)
 
     def _get_ppf(self, lattice, lattice_vals):
         &#34;&#34;&#34;
@@ -1650,7 +2266,8 @@ entropy
         fill_value = (lattice_vals[0], lattice_vals[-1])
         return interp1d_with_warning(
             lattice, lattice_vals, kind=&#39;linear&#39;, assume_sorted=True,
-            bounds_error=False, fill_value=fill_value)
+            bounds_error=False, fill_value=fill_value, 
+            name=f&#39;{self.name} ppf interpolant&#39;)
 
     def cdf(self, k):
         # We do not need the default argument checking from scipy
@@ -1676,7 +2293,8 @@ entropy
         c = self.cdf(g)  # Evaluated cdf
         dx = 1 / (g[1] - g[0])
         dif = np.round(np.ediff1d(c, to_begin=c[1] - c[0]) * dx, decimals=10)
-        return interp1d_with_warning(g, dif, kind=&#39;linear&#39;, assume_sorted=True)
+        return interp1d_with_warning(g, dif, kind=&#39;linear&#39;, assume_sorted=True, 
+                                     name=f&#39;{self.name} pdf interpolant&#39;)
 
     def _entropy(self, *args):
         &#34;&#34;&#34;
@@ -1991,7 +2609,8 @@ transform and inverse transform functions.</p>
 the user to specify <code>bounds_error = 'warn'</code> which overrides the
 behaviour of <code>_check_bunds</code> to warn instead of raising an error.</p>
 <h2 id="parameters">Parameters</h2>
-<p>Accepts all the args and kwargs as scipy.interpolate.interp1d.</p>
+<p>Accepts all the args and kwargs as scipy.interpolate.interp1d.
+Additionally, </p>
 <p>Initialize a 1-D linear interpolation class.</p></div>
 <details class="source">
 <summary>
@@ -2006,10 +2625,12 @@ behaviour of <code>_check_bunds</code> to warn instead of raising an error.</p>
     Parameters
     ----------
     Accepts all the args and kwargs as scipy.interpolate.interp1d.
+    Additionally, 
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
         self.warn = False
+        self.name = kwargs.pop(&#39;name&#39;, &#39;Interp1D&#39;)
         bounds_error = kwargs.get(&#39;bounds_error&#39;)
         if bounds_error == &#39;warn&#39;:
             self.warn = True
@@ -2028,13 +2649,13 @@ behaviour of <code>_check_bunds</code> to warn instead of raising an error.</p>
         below_bounds = x_new &lt; self.x[0]  # Find values which are bellow bounds
         above_bounds = x_new &gt; self.x[-1]  # Find values which are above bounds
 
-        msg = (&#34;{} out of {} values in x_new are {} the interpolation &#34;
+        msg = (&#34;{}: {} out of {} values in x_new are {} the interpolation &#34;
                &#34;range. Read the docs of `fill_value` and `bounds_error` &#34;
                &#34;to manage the behavior.&#34;)
 
         if below_bounds.any():
             if self.bounds_error:
-                m = msg.format(below_bounds.sum(), below_bounds.size, &#39;below&#39;)
+                m = msg.format(self.name, below_bounds.sum(), below_bounds.size, &#39;below&#39;)
                 if self.warn:
                     m += (&#39; Mapping the invalid values to value: &#39;
                           f&#39;{self._fill_value_below}.&#39;)
@@ -2044,7 +2665,7 @@ behaviour of <code>_check_bunds</code> to warn instead of raising an error.</p>
 
         if above_bounds.any():
             if self.bounds_error:
-                m = msg.format(above_bounds.sum(), above_bounds.size, &#39;above&#39;)
+                m = msg.format(self.name, above_bounds.sum(), above_bounds.size, &#39;above&#39;)
                 if self.warn:
                     m += (&#39; Mapping the invalid values to value: &#39;
                           f&#39;{self._fill_value_above}.&#39;)
@@ -2087,6 +2708,15 @@ behaviour of <code>_check_bunds</code> to warn instead of raising an error.</p>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="redistributor.KernelDensity" href="#redistributor.KernelDensity">KernelDensity</a></code></h4>
+<ul class="">
+<li><code><a title="redistributor.KernelDensity.cdf" href="#redistributor.KernelDensity.cdf">cdf</a></code></li>
+<li><code><a title="redistributor.KernelDensity.pdf" href="#redistributor.KernelDensity.pdf">pdf</a></code></li>
+<li><code><a title="redistributor.KernelDensity.ppf" href="#redistributor.KernelDensity.ppf">ppf</a></code></li>
+<li><code><a title="redistributor.KernelDensity.rvs" href="#redistributor.KernelDensity.rvs">rvs</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="redistributor.LearnedDistribution" href="#redistributor.LearnedDistribution">LearnedDistribution</a></code></h4>
 <ul class="">
