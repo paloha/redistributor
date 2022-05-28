@@ -860,11 +860,11 @@ class KernelDensity():
     def _get_support_ppf(self, *args):
         return self.ppfa, self.ppfb
     
-    def rvs(self, n_samples=1, random_state=None):
+    def rvs(self, size=1, random_state=None):
         """
         Random sample from the estimated distribution.
         """
-        return self.kde.sample(n_samples, random_state).ravel()
+        return self.kde.sample(size, random_state).ravel()
     
     def pdf(self, x):
         """
