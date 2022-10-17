@@ -56,29 +56,34 @@ The full version-locked list of dependencies and subdependencies is frozen in `r
 
 ## Mathematical description
 
-Assume we are given data \(x\sim S\) distributed according to some source distribution \(S\) on \(\mathbb{R}\) and our goal is to find a transformation \(R\) such that \(R(x)\sim T\) for some target distribution \(T\) on \(\mathbb{R}\).
+Assume we are given data $x\sim S$ distributed according to some source distribution $S$ on $\mathbb{R}$ and our goal is to find a transformation $R$ such that $R(x)\sim T$ for some target distribution $T$ on $\mathbb{R}$.
 
-One can mathematically show that a suitable \(R\colon \mathbb{R} \to \mathbb{R}\) is given by
+One can mathematically show that a suitable $R\colon \mathbb{R} \to \mathbb{R}$ is given by
 $$
 R := F_{T}^{-1} \circ F_{S},
 $$
-where \(F_S\) and \(F_T\) are the cumulative distribution functions of \(S\) and \(T\), respectively.
+where $F_S$ and $F_T$ are the cumulative distribution functions of $S$ and $T$, respectively.
 
-If \(S\) and \(T\) is unknown, one can use approximations \(\tilde{F}_S\) and \(\tilde{F}_T\) of the corresponding cumulative distribution functions given by interpolating (partially) sorted data
+If $S$ and $T$ is unknown, one can use approximations $\tilde{F}_S$ and $\tilde{F}_T$ of the corresponding cumulative distribution functions given by interpolating (partially) sorted data
+
 $$
 (x_i)_{i=1}^N \ \text{with} \ x_i \sim S
 $$
+
 $$
 (y_i)_{i=1}^M \ \text{with} \ y_i \sim T.
 $$
+
 Defining
 $$
 \tilde{R} := \tilde{F}_{T}^{-1} \circ \tilde{F}_S,
 $$
+
 one can, under suitable conditions, show that
 $$
 \tilde{R} \xrightarrow[N,M\to \infty]{} R.
 $$
+
 
 ## How to cite
 ...

@@ -22,9 +22,9 @@ pdoc . --http localhost:8080 --config latex_math=True
 ## Compilation
 
 ### :page_with_curl: HTML output
-
+To support inline math with `$` delimiter, we customized the `head.mako` template now located in `docs/templates`.
 ```
-pdoc . --html --output-dir docs --force --config latex_math=True
+pdoc . --html --output-dir docs --force --config latex_math=True --template-dir docs/templates
 ```
 
 ### :notebook_with_decorative_cover: PDF output

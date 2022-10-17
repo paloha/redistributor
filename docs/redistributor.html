@@ -16,6 +16,17 @@
 <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+tex2jax: {
+inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+processEscapes: true
+}
+});
+</script>
+<script type="text/javascript"
+src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
 </head>
 <body>
 <main>
@@ -84,32 +95,32 @@ pip install -e .[dev]
 <p>Extra dependencies for running the tests, compiling the documentation, or running the examples are specified in the <code>extras_require</code> dictionary in the same file.</p>
 <p>The full version-locked list of dependencies and subdependencies is frozen in <code>requirements.txt</code>. Installing with <code>pip install -r requirements.txt</code> in a virtual environment should always lead to a fully functional project.</p>
 <h2 id="mathematical-description">Mathematical description</h2>
-<p>Assume we are given data <span><span class="MathJax_Preview">x\sim S</span><script type="math/tex">x\sim S</script></span> distributed according to some source distribution <span><span class="MathJax_Preview">S</span><script type="math/tex">S</script></span> on <span><span class="MathJax_Preview">\mathbb{R}</span><script type="math/tex">\mathbb{R}</script></span> and our goal is to find a transformation <span><span class="MathJax_Preview">R</span><script type="math/tex">R</script></span> such that <span><span class="MathJax_Preview">R(x)\sim T</span><script type="math/tex">R(x)\sim T</script></span> for some target distribution <span><span class="MathJax_Preview">T</span><script type="math/tex">T</script></span> on <span><span class="MathJax_Preview">\mathbb{R}</span><script type="math/tex">\mathbb{R}</script></span>.</p>
-<p>One can mathematically show that a suitable <span><span class="MathJax_Preview">R\colon \mathbb{R} \to \mathbb{R}</span><script type="math/tex">R\colon \mathbb{R} \to \mathbb{R}</script></span> is given by
+<p>Assume we are given data $x\sim S$ distributed according to some source distribution $S$ on $\mathbb{R}$ and our goal is to find a transformation $R$ such that $R(x)\sim T$ for some target distribution $T$ on $\mathbb{R}$.</p>
+<p>One can mathematically show that a suitable $R\colon \mathbb{R} \to \mathbb{R}$ is given by
 <span><span class="MathJax_Preview">
 R := F_{T}^{-1} \circ F_{S},
 </span><script type="math/tex; mode=display">
 R := F_{T}^{-1} \circ F_{S},
 </script></span>
-where <span><span class="MathJax_Preview">F_S</span><script type="math/tex">F_S</script></span> and <span><span class="MathJax_Preview">F_T</span><script type="math/tex">F_T</script></span> are the cumulative distribution functions of <span><span class="MathJax_Preview">S</span><script type="math/tex">S</script></span> and <span><span class="MathJax_Preview">T</span><script type="math/tex">T</script></span>, respectively.</p>
-<p>If <span><span class="MathJax_Preview">S</span><script type="math/tex">S</script></span> and <span><span class="MathJax_Preview">T</span><script type="math/tex">T</script></span> is unknown, one can use approximations <span><span class="MathJax_Preview">\tilde{F}_S</span><script type="math/tex">\tilde{F}_S</script></span> and <span><span class="MathJax_Preview">\tilde{F}_T</span><script type="math/tex">\tilde{F}_T</script></span> of the corresponding cumulative distribution functions given by interpolating (partially) sorted data
-<span><span class="MathJax_Preview">
+where $F_S$ and $F_T$ are the cumulative distribution functions of $S$ and $T$, respectively.</p>
+<p>If $S$ and $T$ is unknown, one can use approximations $\tilde{F}_S$ and $\tilde{F}_T$ of the corresponding cumulative distribution functions given by interpolating (partially) sorted data</p>
+<p><span><span class="MathJax_Preview">
 (x_i)_{i=1}^N \ \text{with} \ x_i \sim S
 </span><script type="math/tex; mode=display">
 (x_i)_{i=1}^N \ \text{with} \ x_i \sim S
-</script></span>
-<span><span class="MathJax_Preview">
+</script></span></p>
+<p><span><span class="MathJax_Preview">
 (y_i)_{i=1}^M \ \text{with} \ y_i \sim T.
 </span><script type="math/tex; mode=display">
 (y_i)_{i=1}^M \ \text{with} \ y_i \sim T.
-</script></span>
-Defining
+</script></span></p>
+<p>Defining
 <span><span class="MathJax_Preview">
 \tilde{R} := \tilde{F}_{T}^{-1} \circ \tilde{F}_S,
 </span><script type="math/tex; mode=display">
 \tilde{R} := \tilde{F}_{T}^{-1} \circ \tilde{F}_S,
-</script></span>
-one can, under suitable conditions, show that
+</script></span></p>
+<p>one can, under suitable conditions, show that
 <span><span class="MathJax_Preview">
 \tilde{R} \xrightarrow[N,M\to \infty]{} R.
 </span><script type="math/tex; mode=display">
@@ -140,6 +151,7 @@ from scipy.interpolate import interp1d
 from sklearn.base import TransformerMixin
 from sklearn.neighbors import KernelDensity as ScikitKDE
 from scipy.stats import norm
+
 
 class Redistributor(TransformerMixin):
     &#34;&#34;&#34;

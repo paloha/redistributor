@@ -12,6 +12,7 @@ from sklearn.base import TransformerMixin
 from sklearn.neighbors import KernelDensity as ScikitKDE
 from scipy.stats import norm
 
+
 class Redistributor(TransformerMixin):
     """
     An algorithm for automatic transformation of data from arbitrary
