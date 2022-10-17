@@ -38,9 +38,10 @@
 </tr>
 </tbody>
 </table>
-<p>This repository introduces two main classes, namely <strong>Redistributor</strong> and <strong>LearnedDistribution</strong>.</p>
-<p><strong>Redistributor</strong> is a tool for automatic transformation of empirical data distributions. It is implemented as a <strong>Scikit-learn transformer</strong>. It allows users to transform their data from arbitrary distribution into another arbitrary distribution. The source and target distributions, if known beforehand, can be specified exactly (e.g. as a <a href="https://docs.scipy.org/doc/scipy/reference/tutorial/stats/continuous.html#continuous-distributions-in-scipy-stats">Continuous Scipy distribution</a> or any other class which has <code>cdf</code> and <code>pdf</code> methods implemented), or can be inferred from the data using <code><a title="redistributor.LearnedDistribution" href="#redistributor.LearnedDistribution">LearnedDistribution</a></code> class. Transformation is <strong>piece-wise-linear, monotonic, invertible</strong>, and can be <strong>saved for later use</strong> on different data assuming the same source distribution.</p>
-<p><strong>LearnedDistribution</strong> is a subclass of <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy-stats-rv-continuous">Scipy.stats.rv_continous</a> class. It is a continuous random variable obtained by estimating the empirical distribution of a user provided array of numeric data <code>x</code>. It can be used to sample new random points from the learned distribution.</p>
+<p>This repository introduces three main classes, namely <strong>Redistributor</strong>, <strong>LearnedDistribution</strong>, and <strong>KernelDensity</strong>.</p>
+<p><strong>Redistributor</strong> is a tool for automatic transformation of empirical data distributions. It is implemented as a <strong>Scikit-learn transformer</strong>. It allows users to transform their data from arbitrary distribution into another arbitrary distribution. The source and target distributions, if known beforehand, can be specified exactly (e.g. as a <a href="https://docs.scipy.org/doc/scipy/reference/tutorial/stats/continuous.html#continuous-distributions-in-scipy-stats">Continuous Scipy distribution</a> or any other class which has <code>cdf</code> and <code>pdf</code> methods implemented), or can be inferred from data using <code><a title="redistributor.LearnedDistribution" href="#redistributor.LearnedDistribution">LearnedDistribution</a></code> or <code><a title="redistributor.KernelDensity" href="#redistributor.KernelDensity">KernelDensity</a></code>classes. Transformation is <strong>piece-wise-linear, monotonic, invertible</strong>, and can be <strong>saved for later use</strong> on different data assuming the same source distribution.</p>
+<p><strong>LearnedDistribution</strong> is a subclass of <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy-stats-rv-continuous">Scipy.stats.rv_continous</a> class. It is a continuous random variable obtained by estimating the empirical distribution of a user provided array of numeric data <code>x</code>. It can be used to sample new random points from the estimated distribution.</p>
+<p><strong>KernelDensity</strong> is a wrapper of <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KernelDensity.html">sklearn.neighbors.KernelDensity</a> class. It only supports Gaussian kernel and is suitable for fitting distributions base on small number of data points. It implements <code>cdf</code> function based on the formula for Gaussian-mixture <code>cdf</code>. It also provides a sped-up version of the <code>cdf</code> which is its approximation (use <code>method='fast'</code>). It also implements <code>ppf</code> function, but since there is no explicit formula for the ppf of a Gaussian mixture, it is an approximation of the real <code>ppf</code>. As <code><a title="redistributor.LearnedDistribution" href="#redistributor.LearnedDistribution">LearnedDistribution</a></code>, also <code><a title="redistributor.KernelDensity" href="#redistributor.KernelDensity">KernelDensity</a></code> is a continuous random variable obtained by estimating the empirical distribution of a user provided array of numeric data <code>x</code>. It also can be used to sample new random points from the estimated distribution.</p>
 <!-- The empirical distribution can be inferred from a 1D array of data. To redistribute multiple slices of your data use <code>Redistributor\_multi</code> class which has a **low memory footprint** and utilizes **parallel computing** to apply multiple <code><a title="redistributor.Redistributor" href="#redistributor.Redistributor">Redistributor</a></code> objects. -->
 <h2 id="installation">Installation</h2>
 <table>
@@ -231,20 +232,24 @@ class LearnedDistribution(rv_continuous):
         ----------
 
         x : 1D numpy array
-            1D vector of which the distribution will be estimated.
+            Values from which the distribution will be estimated.
+            The size of the array should be rather large, in case
+            you have too small sample, consider using KDE class instead.
+            Large magnitude of the array values in combination with
+            small amount of samples, e.g.
 
         a : numeric or None
             Left boundary of the distribution support if known.
-            If specified, must be smaller than x.min().
+            If specified, must be smaller than `x.min()`.
 
         b : numeric or None
             Right boundary of the distribution support if known.
-            If specified, must be bigger than x.max().
+            If specified, must be bigger than `x.max()`.
 
         bins : int or None
             User specified value of bins. Min is 3, max is `x.size`.
             If None or 0, bins are set automatically. Upper bound
-            is set to 1000 to prevent unnecessary computation.
+            is set to 5000 to prevent unnecessary computation.
             Used to specify the density of the lattice. More bins
             means higher precision but also more computation.
 
@@ -263,7 +268,8 @@ class LearnedDistribution(rv_continuous):
             with a defined integer step. Not doing `random.choice()` but rather
             simple `slice(None, None, subsample_x)` because it is faster and
             we assume the array is randomly ordered. Can lead to significant
-            speedups.
+            speedups. If you need different approach to subsampling, do it in
+            advance, provide already subsampled `x` and set this to None.
 
         ravel_x : bool, default True
             LearnedDistribution requires 1D arrays. So the `x` is by default
@@ -271,54 +277,61 @@ class LearnedDistribution(rv_continuous):
 
         assume_sorted : bool, default False
             If the user knows that `x` is sorted, setting this to True will
-            save a most of time by ommiting partial sorting the array.
+            save computation by ommiting partial sorting the array.
             Especially useful if the array `x` is big. E.g. 1GB of data
             takes approx. 10s to partial sort on 5000 positions.
             If `False` and `x` is almost sorted, it will still be faster than
             if `x` is randomly ordered.
 
-        fill_value : None, array-like, float, 2-tuple or &#39;auto&#39;, default=&#39;auto&#39;
+        fill_value : None, float, 2-tuple, &#39;auto&#39;, default=&#39;auto&#39;
             Specifies where to map the values out of the `cdf` support. See the
             docstring of scipy.interpolate.interp1d to learn more about the
-            valid options. Additionally, this class enables the user to use
+            possible options. Additionally, this class enables the user to use
             the default `auto` option, which sets reasonable `fill_value`
             automatically.
 
-        bounds_error : bool or &#39;warn&#39;, default &#39;warn&#39;
-            See the docstring of class interp1d_with_warning.
+            WARNING: Not all choices of `fill_value` that are possible are also
+            valid. E.g. `fill_value` should not be manually set to value
+            smaller than 0 or larger than one. Also, `fill_value` should
+            not be set such that it would make the output function decreasing.
+            This also rules out the usage of &#39;extrapolate&#39; option. All of these
+            choices would not lead to a meaningful output in terms of
+            a Cumulative Distribution Function.
 
-        dupl_method : str, one of {&#39;keep&#39;, &#39;spread&#39;, &#39;cluster&#39;, &#39;noise&#39;}
-                      default &#39;spread&#39;
-            Method of solving duplicate lattice values. Read more in
-            docstring of `make_unique()`.
+        bounds_error : bool or &#39;warn&#39;, default &#39;warn&#39;
+            If True, raises an error when values out of `cdf` support are
+            encountered. If False or &#39;warn&#39;, the invalid values are mapped to
+            `fill_value`. For more details see the docstring of class
+            `interp1d_with_warning`.
+
+        resolve_duplicates : 2-tuple (`dist`, `mode`) or None,
+                             default (&#39;max&#39;, &#39;raise&#39;)
+            If not None, makes a call to `make_unique` with specified `dist`
+            and `mode` to make sure all `lattice_values` are unique. Read more
+            in the docstring of `make_unique` function.
+
+            WARNING: If None, the array is kept with duplicates which means the
+            `p != cdf(ppf(p))`. In case there is mulitple duplicates of `xmin`
+            or `xmax` values, `cdf(xmin)` will fail to map to Δ and `cdf(xmax)`
+            will fail to map to 1 - Δ as it should.
 
         name : str, default &#39;LearnedDistribution&#39;
-            The name of the instance.
+            Name of the instance. Useful for locating source of warnings, etc.
 
         seed : {None, int, `numpy.random.Generator`,
-            `numpy.random.RandomState`}, default None
+                `numpy.random.RandomState`}, default None
             See the docstring of scipy.stats.rv_continuous.
-            Used in `_prevent_same()` and `rvs()`.
+            Used in `make_unique()` and `rvs()`.
 
         kwargs : all other keyword arguments accepted by rv_continous.
-
-
-        Methods - TODO finish this documentation
-        -------
-
-        cdf
-        ppf
-        pdf
-        rvs
-        entropy
-        ... fill in the rest which is implemented
-        ... handle the rest which does not make sense
         &#34;&#34;&#34;
 
     def __init__(self, x, a=None, b=None, bins=None, keep_x_unchanged=True,
                  subsample_x=None, ravel_x=True, assume_sorted=False,
-                 fill_value=&#39;auto&#39;, bounds_error=&#39;warn&#39;, dupl_method=&#39;spread&#39;,
-                 seed=None, name=&#39;LearnedDistribution&#39;, **kwargs):
+                 fill_value=&#39;auto&#39;, bounds_error=&#39;warn&#39;,
+                 resolve_duplicates=(&#39;max&#39;, &#39;raise&#39;),
+                 seed=None, name=&#39;LearnedDistribution&#39;,
+                 **kwargs):
 
         super().__init__(name=name, seed=seed, **kwargs)
 
@@ -347,9 +360,11 @@ class LearnedDistribution(rv_continuous):
         # Setting lattice density
         self.bins = self._infer_bins(x.size, bins)
 
+        # Argument for treating duplicates
+        self.resolve_duplicates = resolve_duplicates
+
         # Interpolating to get the empirical distribution
         self.assume_sorted = assume_sorted
-        self.dupl_method = dupl_method
         lattice, vals = self._get_lattice_and_vals(x, keep_x_unchanged)
         self._cdf = self._get_cdf(lattice, vals)
         self._ppf = self._get_ppf(lattice, vals)
@@ -357,27 +372,43 @@ class LearnedDistribution(rv_continuous):
 
     def _get_support(self, *args):
         &#34;&#34;&#34;
-        Support of LearnedDistribution does not depend on any scipy arguments,
-        we keep args only to keep the signature unchanged from super.
+        Support of LearnedDistribution `cdf` does not depend on any scipy
+        argument, we keep args only to keep the signature unchanged from super.
 
-        The support depends only on whether `a` and/or `b` were specified
-        explicitely or as Nones.
+        In this case, the support of `cdf` depends only on whether `a` and/or
+        `b` were specified explicitely or as None values. Here, we return the
+        &#34;valid&#34; support based on data. The &#34;valid&#34; support might be shrunk if
+        either `a` or `b` is set to None. Only the points from the &#34;valid&#34;
+        support actually map to unique values. So, if the &#34;valid&#34; support is
+        not `[a, b]` but e.g. `[xmin, b]`, all the points from the interva
+        `[a, xmin]` will map to the same value.
 
-        `self.a` and/or `self.b` are kept stored as Nones to keep the
-        information about the object config for future reference of the user.
+        In case the boundaries were not set, `self.a` and/or `self.b` are kept
+        stored as Nones to keep the information about the object config for
+        future reference.
 
         Returns
         -------
         a, b : numeric (float, or int)
-            end-points of the distribution&#39;s support.
+            End-points of the valid `cdf` support.
         &#34;&#34;&#34;
         return self._cdf.x[0], self._cdf.x[-1]
 
     def _get_support_ppf(self, *args):
         &#34;&#34;&#34;
-        The support of `ppf` in scipy is always `[0,1]` so this method does not
-        exist in `rv_continuous`. In our case, the support might be shrinked if
-        any of the a, b is set to None.
+        The support of `ppf` in scipy is always `[0, 1]` so this method does
+        not exist in `rv_continuous`. Here, we return the &#34;valid&#34; support based
+        on data. The &#34;valid&#34; support might be shrunk if either `a` or `b` is
+        set to None. However, all the values from `[0, 1]` are actually
+        supported. Although, only the points from the &#34;valid&#34; support actually
+        map to unique values. So, if the &#34;valid&#34; support is not `[0, 1]` but
+        e.g. `[Δ, 1]`, all the points from the interval `[0, Δ]` will map to
+        the same value.
+
+        Returns
+        -------
+        a, b : numeric (float, or int)
+            End-points of the valid `ppf` support.
         &#34;&#34;&#34;
         return self._ppf.x[0], self._ppf.x[-1]
 
@@ -457,61 +488,67 @@ class LearnedDistribution(rv_continuous):
 
         lattice, 1D array of equidistant values
             Support of ppf or range of cdf. The first value of the array will
-            be either 0 or epsilon and the last value will be either 1 or
-            1 - epsilon depending if a or b are specified or None. Size or the
-            array will range from bins to bins + 2.
+            be either `0` or `Δ` and the last value will be either `1` or
+            `1 - Δ` depending if `a` or `b` are specified or None. Size of the
+            array will range from `bins` to `bins + 2`. `Δ = 1 / (bins + 1)`.
 
         lattice_vals, 1D array
             Range of ppf or support of cdf. The first value of the array will
-            be either xmin or a and the last value will be either xmax or b
+            be either `xmin` or a and the last value will be either `xmax` or b
             depending if a or b are specified or None. Size of the array will
             be the same as of `lattice`.
         &#34;&#34;&#34;
 
-        # Do we need expansion by a or b from Left or Right side or both?
-        L, R = self.a is not None, self.b is not None
-
-        # Indices at which we need x to be sorted considering L and R
+        # Indices at which we need x to be sorted
         indices = np.linspace(
-            0, x.size + L + R - 1, self.bins).round().astype(int)
-        indices = indices[L:-1 if R else None] - L
+            0, x.size - 1, self.bins).round().astype(int)
 
         if not self.assume_sorted:
-            # Reorder values of x on indices as if the array was sorted
-            if keep_x_unchanged:
-                # Does not change x but uses twice the memory
-                x = np.partition(x, indices)
-            else:
-                # Does not use additional memory but alters the order of data
-                x.partition(indices)
+            # If bins is reasonably small in comparison to x.size it
+            # pays off to do partial introselect sort instead of full sort
+            use_partial = (self.bins / x.size) &lt;= 0.25
+            if keep_x_unchanged:  # Does not change x but uses twice the memory
+                x = np.partition(x, indices) if use_partial else np.sort(x)
+            else:  # Doesn&#39;t use additional memory but alters the order of data
+                x.partition(indices) if use_partial else x.sort()
+
+        # Expand the cdf suport by a and/or b from Left and/or Right side?
+        L, R = self.a is not None, self.b is not None
+
+        # Get the values to build the lattice
+        vals_at_indices = x[indices]
+        if self.resolve_duplicates is not None:
+            make_unique(vals_at_indices, *self.resolve_duplicates,
+                        assume_sorted=True, inplace=True,
+                        random_state=self.random_state)
 
         # Get the _ppf.y (or _cdf.x) values
-        eps = 1 / (x.size + 1)  # Shrink the lattice with eps to exclude 0 or 1
-        lattice_vals = np.hstack([[self.a] * L, x[indices], [self.b] * R])
+        lattice_vals = np.hstack([[self.a] * L, vals_at_indices, [self.b] * R])
 
         # Get the _ppf.x (or _cdf.y) values
+        delta = 1 / (self.bins + 1)  # Shrink using Δ to exclude 0 or 1
         lattice = np.linspace(
-            eps * (not L), 1 - eps * (not R), lattice_vals.size)
+            delta * (not L), 1 - delta * (not R), lattice_vals.size)
 
         if not all(np.isfinite(lattice_vals)):
             raise ValueError(&#39;Values of x on the lattice must be finite.&#39;)
 
-        # If necessary, make duplicate values unique and warn the user.
-        lattice_vals = make_unique(
-            lattice_vals, self.random_state, mode=self.dupl_method)
         return lattice, lattice_vals
 
     def _get_cdf(self, lattice, lattice_vals):
         &#34;&#34;&#34;
         Interpolates the lattice on lattice_vals to get the `cdf`.
+        If the function is evaluated at a point outside of the support,
+        it is mapped to fill_value.
 
-        Table of `fill_value` if `self.fill_value == &#39;auto&#39;` (n = x.size):
+        Table of `fill_value` if `self.fill_value == &#39;auto&#39;`
+        Δ = 1 - (bins + 1)
         ------------------------------------------------------------------
         a     | b     | cdf support | truncated to | fill_value
         ------------------------------------------------------------------
-        None  | None  | xmin, xmax  | xmin, xmax   | 1/(n-1), (n-2)/(n-1)
-        None  | b     | xmin, b     | xmin, None   | 1/(n-1), None
-        a     | None  | a,    xmax  | None, xmax   | None, (n-2)/(n-1)
+        None  | None  | xmin, xmax  | xmin, xmax   | Δ, 1-Δ
+        None  | b     | xmin, b     | xmin, None   | Δ, None
+        a     | None  | a,    xmax  | None, xmax   | None, 1-Δ
         a     | b     | a,    b     | None, None   | None, None
         &#34;&#34;&#34;
 
@@ -524,7 +561,7 @@ class LearnedDistribution(rv_continuous):
 
         return interp1d_with_warning(
             lattice_vals, lattice, kind=&#39;linear&#39;, assume_sorted=True,
-            bounds_error=self.bounds_error, fill_value=fill_value, 
+            bounds_error=self.bounds_error, fill_value=fill_value,
             name=f&#39;{self.name} cdf interpolant&#39;)
 
     def _get_ppf(self, lattice, lattice_vals):
@@ -533,29 +570,62 @@ class LearnedDistribution(rv_continuous):
         `fill_values` is set to the `xmin` and `xmax` to avoid problems
         when generating random sample with `rvs()`. `bounds_error` is
         set to `False` because user does not need a warning about this
-        behaviour and values `q &lt; 0` or `q &gt; 1` should not ever occur at all.
+        behaviour and values `p &lt; 0` or `p &gt; 1` should not ever occur at all.
         &#34;&#34;&#34;
         fill_value = (lattice_vals[0], lattice_vals[-1])
         return interp1d_with_warning(
             lattice, lattice_vals, kind=&#39;linear&#39;, assume_sorted=True,
-            bounds_error=False, fill_value=fill_value, 
+            bounds_error=False, fill_value=fill_value,
             name=f&#39;{self.name} ppf interpolant&#39;)
 
-    def cdf(self, k):
-        # We do not need the default argument checking from scipy
-        # because we handle the invalid values differently using
-        # the class `interp1d_withwarning`. Therefore:
-        k = np.asarray(k)
-        return self._cdf(k)
+    def cdf(self, q):
+        &#34;&#34;&#34;
+        Interpolates the lattice on lattice_vals to get the
+        piecewise linear approximation to the emprical cumulative
+        distribution function of the learned distribution.
 
-    def ppf(self, q):
+        Parameters
+        ----------
+        q : array_like
+            quantile
+
+        Returns
+        -------
+        p : 1D numpy array of floats
+            Cumulative distribution function evaluated at `q`.
+            I.e. lower tail probability corresponding to the quantile q.
+        &#34;&#34;&#34;
         # We do not need the default argument checking from scipy
         # because we handle the invalid values differently using
         # the class `interp1d_withwarning`. Therefore:
         q = np.asarray(q)
-        if np.any(q &lt; 0) or np.any(q &gt; 1):
+        return self._cdf(q)
+
+    def ppf(self, p):
+        &#34;&#34;&#34;
+        Interpolates the lattice_vals on lattice to get the
+        piecewise linear approximation to the inverse of the emprical
+        cumulative distribution function of the learned distribution.
+        I.e. a Percent point function of the learned distribution.
+
+        Parameters
+        ----------
+        p : array_like
+            lower tail probability
+
+        Returns
+        -------
+        q : 1D numpy array of floats
+            Percent point function evaluated at `p`.
+            I.e. quantile corresponding to the lower tail probability p.
+        &#34;&#34;&#34;
+        # We do not need the default argument checking from scipy
+        # because we handle the invalid values differently using
+        # the class `interp1d_withwarning`. Therefore:
+        p = np.asarray(p)
+        if np.any(p &lt; 0) or np.any(p &gt; 1):
             raise ValueError(&#39;Some values out of ppf support [0, 1].&#39;)
-        return self._ppf(q)
+        return self._ppf(p)
 
     def _get_pdf(self):
         &#34;&#34;&#34;
@@ -565,7 +635,7 @@ class LearnedDistribution(rv_continuous):
         c = self.cdf(g)  # Evaluated cdf
         dx = 1 / (g[1] - g[0])
         dif = np.round(np.ediff1d(c, to_begin=c[1] - c[0]) * dx, decimals=10)
-        return interp1d_with_warning(g, dif, kind=&#39;linear&#39;, assume_sorted=True, 
+        return interp1d_with_warning(g, dif, kind=&#39;linear&#39;, assume_sorted=True,
                                      name=f&#39;{self.name} pdf interpolant&#39;)
 
     def _entropy(self, *args):
@@ -586,18 +656,6 @@ class LearnedDistribution(rv_continuous):
             random_state = default_rng(random_state)
         return self.ppf(
             random_state.uniform(*self._get_support_ppf(), size=size))
-
-
-def save_redistributor(d, path):
-    &#34;&#34;&#34;Saves the Redistributor object to a file.&#34;&#34;&#34;
-    import joblib
-    joblib.dump(d, path)
-
-
-def load_redistributor(path):
-    &#34;&#34;&#34;Loads the Redistributor object from a file.&#34;&#34;&#34;
-    import joblib
-    return joblib.load(path)
 
 
 def plot_cdf_ppf_pdf(dist, a=None, b=None, bins=None,
@@ -679,7 +737,6 @@ class interp1d_with_warning(interp1d):
     Parameters
     ----------
     Accepts all the args and kwargs as scipy.interpolate.interp1d.
-    Additionally, 
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
@@ -709,7 +766,8 @@ class interp1d_with_warning(interp1d):
 
         if below_bounds.any():
             if self.bounds_error:
-                m = msg.format(self.name, below_bounds.sum(), below_bounds.size, &#39;below&#39;)
+                m = msg.format(self.name, below_bounds.sum(),
+                               below_bounds.size, &#39;below&#39;)
                 if self.warn:
                     m += (&#39; Mapping the invalid values to value: &#39;
                           f&#39;{self._fill_value_below}.&#39;)
@@ -719,7 +777,8 @@ class interp1d_with_warning(interp1d):
 
         if above_bounds.any():
             if self.bounds_error:
-                m = msg.format(self.name, above_bounds.sum(), above_bounds.size, &#39;above&#39;)
+                m = msg.format(self.name, above_bounds.sum(),
+                               above_bounds.size, &#39;above&#39;)
                 if self.warn:
                     m += (&#39; Mapping the invalid values to value: &#39;
                           f&#39;{self._fill_value_above}.&#39;)
@@ -730,364 +789,220 @@ class interp1d_with_warning(interp1d):
         return below_bounds, above_bounds
 
 
-def make_unique(array, random_state, mode=&#39;spread&#39;, duplicates=None):
-    &#34;&#34;&#34;
-    Takes a sorted array and adjusts the duplicate values such that all
-    elements of the array are unique. The adjustment is done by linearly
-    separating the duplicates. Read more in docsting of `_get_intervals`.
-
-    In case `mode=&#39;keep&#39;` this function does nothing and returns the array.
-
-    Supports two deterministic modes &#39;spread&#39; and &#39;cluster&#39;. These two
-    define onto how large interval the valueas are spread. If &#39;cluster&#39;
-    is not possible &#39;spread&#39; is used implicitly.
-
-    In case there are too many duplicates (&gt;5e3), first uses addition of
-    random noise to non-min and non-max values and then continues with the
-    deterministic method.
-
-    Keeps the min, max, and unique values unchanged.
-    If the first iteration did not make all elements unique, repeats until
-    failure and warns the user (should be rare).
-
-
-    Parameters
-    ----------
-    array: 1D numpy array
-        Sorted array with potential of having non-unique elements.
-
-    random_state: RandomState
-
-    mode: str, one of {&#39;keep&#39;, &#39;spread&#39;, &#39;cluster&#39;, &#39;noise&#39;}
-      &#39;keep&#39; produces discontinuous cdf (cdf with vertical jumps)
-          because it just simply keeps the non unique values
-      &#39;spread&#39; is deterministic but slow to compute,
-          it separates the non unique values equidistantly and
-          tries to use all the available space between consecutive values.
-      &#39;cluster&#39; is deterministic and also slow to compute,
-          it separates the non unique values equidistantly but
-          it does only use a small space around the value.
-      &#39;noise&#39; is fast, very similar to &#39;cluster&#39;, but nondeterministic
-          because it involves randomness and it handles min and max values
-          separately to avoid jumping out of the a,b interval.
-
-    duplicates: int, number of duplicates in previous iteration.
-        Do not use, used only for recursion.
-
-
-    Returns
-    --------
-    Sorted array of unique elements on the orignal interval.
-    &#34;&#34;&#34;
-
-    if mode == &#39;keep&#39;:
-        return array
-
-    def _get_intervals(array, diff):
-        &#34;&#34;&#34;
-        Iterates over the diff of the array, when it finds a duplicate
-        value (i.e., when diff == 0), it adds it to the result dict and
-        finds the interval onto which the duplicates can be spread such
-        that the value does not jump over previous/next value or it&#39;s
-        intrval. If two duplicate values are right after each other, they
-        share the interval between them based on number of duplicates each
-        of tham has. Note that with array [2, 2] the number of duplicates
-        of the value 2 is counted as 1. The other is original.
-
-        Returns
-        -------
-        dict {value: [n: int, n of val duplicates,
-                      i: int, first index of duplicate value,
-                      j: int, last index of duplicate value,
-                      a: int, start of safe interval,
-                      b: int, end of safe interval]}
-
-        Example
-        -------
-
-        array = [0,0,1,3,4,6,6,6,7,7,9,9]
-        diff  = [0,1,2,1,2,0,0,1,0,2,0,9]
-        r = {
-            0: [1, 0, 1, 0, 1],
-            6: [2, 5, 7, 4, 6.666666666666667],
-            7: [1, 8, 9, 6.666666666666667, 7.923076923076923],
-            9: [1, 10, 11, 7.923076923076923, 9]}
-        &#34;&#34;&#34;
-        r = {}
-        n = 0
-        prev = v = i = j = a = b = None
-        for p, (d, dd) in enumerate(zip(diff, diff[1:])):
-            if d == 0:  # Duplicate value
-                v = array[p]
-                if n == 0:  # First occurence
-                    a = array[p] if p == 0 else array[p - 1]
-                    i = p  # First occurence index
-                n += 1
-                if dd != 0:  # Last occurence
-                    b = array[p + 2] if p + 2 &lt; array.size else array[p + 1]
-                    j = p + 1  # Last occurence index
-
-                    # Two duplicates next to each other must share interval
-                    # Proportion for each is assigned based on their counts
-                    if prev is not None and v == r[prev][4]:
-                        pn = r[prev][0]  # Previous n
-                        d1 = prev - r[prev][3]  # Interval left of prev
-                        d2 = v - prev  # Interval left of current value
-                        d3 = b - v  # Interval right of current value
-                        pw = (pn * d2) / (d1 + d2)  # weight of prev val
-                        cw = (n * d2) / (d2 + d3)  # weight of current val
-                        a = prev + (d2 * pw) / (pw + cw)
-                        r[prev][4] = a  # Adjust previous val&#39;s b value
-
-                    # Store result and restart counters
-                    r[v] = [n, i, j, a, b]  # Mutable for adjustments
-                    prev = v
-                    v = i = j = a = b = None
-                    n = 0
-        return r
-
-    eps = 1e3 * np.finfo(array.dtype).eps
-
-    # Assuming sorted array
-    _min, _max = array[0], array[-1]
-    diff = np.ediff1d(array, to_end=np.abs(_max))
-    if np.any(diff &lt; 0):
-        raise ValueError(&#39;Array must be sorted.&#39;)
-
-    # Find all duplicates
-    dupl = diff == 0
-
-    # No work if no duplicates
-    n_duplicates = dupl.sum()
-    if n_duplicates == 0:
-        return array
-
-    if n_duplicates == duplicates:
-        warnings.warn((
-            f&#39;Returning non-unique. Unable to remove {n_duplicates} &#39;
-            f&#39;({(n_duplicates / array.size) * 100}%) duplicates.&#39;))
-        return array
-
-    warnings.warn(
-        (f&#39;Adjusting {n_duplicates / array.size * 100}% non-unique &#39;
-         &#39;lattice values. Avoid learning discrete distributions.&#39;))
-
-    if (n_duplicates &gt; int(5e3) or mode == &#39;noise&#39;) and duplicates is None:
-        warnings.warn((
-            f&#39;Array has too many duplicates ({n_duplicates}) &#39;
-            &#39;to use the deterministic algorithm. Solving some &#39;
-            &#39;or all by adding small random noise.&#39;))
-        change = dupl &amp; np.logical_not((array == _min) | (array == _max))
-        array[change] += random_state.uniform(eps, 10 * eps, change.sum())
-        return make_unique(
-            np.sort(array), random_state, mode, n_duplicates)
-    else:
-        # If there is not that many duplicates, we use
-        # this method, which would be otherwise slower.
-        intervals = _get_intervals(array, diff)
-        for k, v in intervals.items():
-            n, i, j, a, b = v
-            if mode == &#39;cluster&#39;:
-                a = np.max([a, k - n * eps])
-                b = np.min([b, k + n * eps])
-
-            # Using size n+1+n%2 to avoid a and k in lin
-            lin = np.linspace(a, b, n + 1 + n % 2, endpoint=False,
-                              dtype=array.dtype)[1 + n % 2:]
-            if k in lin:  # Accidentely linspace falls on k
-                lin = np.sort(np.random.uniform(a, b, n))
-            assert a not in lin and k not in lin, (
-                &#39;a or k in lin, this is a bug. Pls report. &#39;
-                f&#39; {k}, {n}, {a}, {b}, {lin}&#39;)
-            array[i:j] = lin
-
-        return make_unique(
-            np.sort(array), random_state, mode, n_duplicates)
-
-    
 class KernelDensity():
     &#34;&#34;&#34;
-    Wrapper around KernelDensity for ease of use as a source or 
+    Wrapper around KernelDensity for ease of use as a source or
     target distribution of Redistributor. It extends the KDE by
     providing cdf and ppf functions.
-    
-    Only supports 1D input because Redistributor also works only in 1D. 
+
+    Only supports 1D input because Redistributor also works only in 1D.
     Only supports gaussian kernel. CDF supports two methods, precise and fast.
     CDF precise is computed using a formula. CDF fast is a linear interpolation
     of the CDF precise on a grid of specified density. There is no explicit
     formula for PPF of gaussian mixutre, so here it is approximated using
     linear interpolation of the CDF precise on a grid of specified density.
-    
+
     Parameters
     ----------
 
     x : numeric or 1D numpy array
         1D vector of which the distribution will be estimated.
-        
+
     ravel_x : bool, default True
         KDE requires 1D arrays. So the `x` is by default
         flattened to 1D using `np.ravel()`.
-        
+
     grid_density : int
-        User specified number of grid points on which the CDF is computed 
+        User specified number of grid points on which the CDF is computed
         precisely in order to build the interpolants for fast CDF and PPF.
         The same grid is used for CDF fast and PPF. The user specified
         value of grid_density is not it&#39;s final value. It is updated
         during initialization of this object on call of `self._get_ppf()`.
-    
+
     cdf_method : str, one of {&#39;precise&#39;, &#39;fast&#39;}
         Specifies the default method to be used when self.cdf() is called.
-    
+        &#39;precise&#39; computes cdf using a formula, &#39;fast&#39; uses a precomputed
+        interpolant to get a fast approximation.
+
     name : str, default &#39;LearnedDistribution&#39;
             The name of the instance.
-            
-    kwargs : all other keyword arguments accepted by sklearn.neighbors.KernelDensity.
-    
-    
+
+    kwargs : keyword arguments accepted by sklearn.neighbors.KernelDensity.
+
+
     Methods
     -------
-    
+
     pdf : Probability Density Function of a Gaussian Mixture
-    cdf : Cumulative Density Function of a Gaussian Mixture (or its approximation)
+    cdf : Cumulative Distribution Function of a Gaussian Mixture
     ppf : Approximation of a Percent Point Function of a Gaussian Mixture
     rvs : Random sample generator
     &#34;&#34;&#34;
-    
-    def __init__(self, x, ravel_x=True, grid_density=int(1e4), cdf_method=&#39;fast&#39;, 
-                 name=&#39;KDE&#39;, **kwargs):
-        
+
+    def __init__(self, x, ravel_x=True, grid_density=int(1e4),
+                 cdf_method=&#39;fast&#39;, name=&#39;KDE&#39;, **kwargs):
+
         self.name = name
-        
+
         if kwargs.get(&#39;kernel&#39;) not in [None, &#39;gaussian&#39;]:
-            raise ValueError(&#39;Only gaussian kernel is supported in this wrapper.&#39;)
-            
+            raise ValueError(&#39;Only gaussian kernel is supported here.&#39;)
+
         # Fitting the KDE
         x = np.asarray(x)
         if ravel_x:
             x = x.ravel()
         self._validate_shape(x)
-        self.kde = ScikitKDE(**kwargs).fit(x.reshape(-1,1))
-        
+        self.kde = ScikitKDE(**kwargs).fit(x.reshape(-1, 1))
+
         # Approximation of cdf with linear interpolation
         self.cdf_method = cdf_method
         self._cdf_fast = None  # Computed during call of _get_ppf()
-        
+
         # Controls the ppf approximation precision
         if grid_density &lt; 10:  # 10 is already unreasonably small
             raise ValueError(&#39;Grid density too small.&#39;)
         self.grid_density = grid_density
         self._ppf = self._get_ppf()
-        
+
     def _validate_shape(self, data):
         if not data.ndim == 1:
             raise ValueError(&#39;Input array must be 1D. You can use x.ravel().&#39;)
-            
+
     def _get_support(self, *args):
         return self.a, self.b
-    
+
     def _get_support_ppf(self, *args):
         return self.ppfa, self.ppfb
-    
+
     def rvs(self, size=1, random_state=None):
         &#34;&#34;&#34;
         Random sample from the estimated distribution.
         &#34;&#34;&#34;
         return self.kde.sample(size, random_state).ravel()
-    
+
     def pdf(self, x):
         &#34;&#34;&#34;
         Probability density function of the estimated distribution.
+
+        Parameters
+        ----------
+        q : array_like
+            quantile
+
+        Returns
+        -------
+        d : 1D numpy array of floats
+            Probability density function evaluated at `q`.
+            I.e. probability density corresponding to the quantile q.
         &#34;&#34;&#34;
+
         x = np.asarray(x)
         if x.ndim == 0:
             x = x.reshape(1)
         self._validate_shape(x)
-        return np.exp(self.kde.score_samples(x.reshape(-1, 1)))   
-        
-    def cdf(self, k, method=None):
-        &#34;&#34;&#34; 
-        Cummulative density function of the estimated distribution.
+        return np.exp(self.kde.score_samples(x.reshape(-1, 1)))
+
+    def cdf(self, q, method=None):
+        &#34;&#34;&#34;
+        Cumulative distribution function of the estimated distribution.
+
+        Parameters
+        ----------
+        q : array_like
+            quantile
+
+        Returns
+        -------
+        p : 1D numpy array of floats
+            Cumulative distribution function evaluated at `q`.
+            I.e. lower tail probability corresponding to the quantile q.
         &#34;&#34;&#34;
         method = method or self.cdf_method
-        
+
         if method == &#39;fast&#39;:
-            fast = self._cdf_fast(k)
-            # Handling out of support k by computing it precisely
+            fast = self._cdf_fast(q)
+            # Handling out of support q by computing it precisely
             # out_of_support.sum() gives the number of out_of_support values
             out_of_support = np.isnan(fast)
             if out_of_support.any():
-                fast[out_of_support] = self.cdf(k[out_of_support], method=&#39;precise&#39;)
+                fast[out_of_support] = \
+                    self.cdf(q[out_of_support], method=&#39;precise&#39;)
             return fast
-        
+
         elif method == &#39;precise&#39;:
             data = np.asarray(self.kde.tree_.data)
             out = 0.0
             for data_point in data:
-                out += norm.cdf(k, loc=data_point, scale=self.kde.bandwidth)
+                out += norm.cdf(q, loc=data_point, scale=self.kde.bandwidth)
             return out / data.size
-        
+
         else:
-            raise NotImplementedError(&#39;Method must be one of {&#34;fast&#34;, &#34;precise&#34;}&#39;)
-            
-    def ppf(self, q):
+            raise NotImplementedError(&#39;Method not it {&#34;fast&#34;, &#34;precise&#34;}&#39;)
+
+    def ppf(self, p):
         &#34;&#34;&#34;
+        Percent point function of the estimated distribution.
         This method approximates the ppf based on linear interpolation
         of the cdf on self.grid_density many points. There is no formula
         for precise computation of gaussian mixture ppf. Therefore, if
         we wanted a precise function, we would need to bisect the cdf.
         Bisecting is very slow in comparison to just computing the cdf
         on a grid and using the interpolant to approximate the ppf.
+
+        Parameters
+        ----------
+        p : array_like
+            lower tail probability
+
+        Returns
+        -------
+        q : 1D numpy array of floats
+            Percent point function evaluated at `p`.
+            I.e. quantile corresponding to the lower tail probability p.
         &#34;&#34;&#34;
-        q = np.asarray(q)
-        if (q &lt; 0).any() or (q &gt; 1).any():
-            raise ValueError(&#39;Value in q out of PPF support (0, 1).&#39;)
-        return self._ppf(q)
+        p = np.asarray(p)
+        if (p &lt; 0).any() or (p &gt; 1).any():
+            raise ValueError(&#39;Value in p out of PPF support (0, 1).&#39;)
+        return self._ppf(p)
 
     def _get_ppf(self):
         &#34;&#34;&#34;
-        In order to get a fast ppf function, we will sample
-        the cdf on its support using a grid of desired density.
-        Then we create an interpolant which maps the values
-        inversly, thus getting an approximation to a ppf func.
-        
-        Theoretically, ppf(0), ppf(1) must map to -inf, +inf.
-        We can not interpolate to infinite values, therefore,
-        for the ppf range, we pick the closest finite values 
-        from the grid. Everything outside will be set to ±inf.
-        
-        This way we obtain a precise enough interpolant which
-        also maps the 0 and 1 to ±inf. 
+        In order to get a fast ppf function, we will sample the cdf on its
+        support using a grid of desired density. Then we create an interpolant
+        which maps the values inversly, thus getting an approximation to a ppf.
+
+        Theoretically, ppf(0), ppf(1) must map to -inf, +inf. We can not
+        interpolate to infinite values, therefore, for the ppf range, we pick
+        the closest finite values from the grid. Everything outside will be
+        set to ±inf. This way we obtain a precise enough interpolant which
+        also maps the 0 and 1 to ±inf.
         &#34;&#34;&#34;
 
         def argvalid(arr):
             &#34;&#34;&#34;
-            Returns 2-tuple of indices `first` and `last`
-            which can be used to slice `arr` to get only
-            valid values (0+ε &lt; valid &lt; 1-ε). Function assumes
-            `arr` is sorted and finite. ε is a multiple of 
-            the tiniest number which can be represented in 
-            float64. In theory ε could be 0, but we get
-            numerical instabilities when interpolating later.
-            If all values from left side are valid, first = 0.
-            If all values from right side are valid, last = None.
+            Returns 2-tuple of indices `first` and `last` which can be used to
+            slice `arr` to get only valid values (0 &lt; valid &lt; 1). Function
+            assumes `arr` is sorted and finite. If all values from left side
+            are valid, first = 0. If all values from right side are valid,
+            last = None.
             &#34;&#34;&#34;
-            v = arr &gt; 0 #10 * np.finfo(np.float64).tiny
-            w = arr &lt; 1 #- 10 * np.finfo(np.float64).tiny
+            v = arr &gt; 0
+            w = arr &lt; 1
             first = v.size - v.sum()
             last = w.sum() - w.size
             last = None if last == 0 else last
             return first, last
-        
+
         # Computing the empirical range of the ppf
-        # Bandwidth * 39 is just an empirical distance from the mean 
+        # Bandwidth * 39 is just an empirical distance from the mean
         # of a gaussian which maps to 0 due to floating point precision.
         # Therefore a, b is just a bit bigger than an empirical
         # ppf range (or cdf support).
-        
+
         # Approximate a, b
         a = np.min(self.kde.tree_.data) - self.kde.bandwidth * 39
         b = np.max(self.kde.tree_.data) + self.kde.bandwidth * 39
-        
+
         # Since a, b is a bit bigger than the cdf support
         # a few of the first cdfx values will all map to 0
         # and a few of the last cdfx values will all map to 1.
@@ -1096,30 +1011,158 @@ class KernelDensity():
         cdfx = np.linspace(a, b, self.grid_density)  # grid
         cdfy = self.cdf(cdfx, method=&#39;precise&#39;)
         first, last = argvalid(cdfy)
-        
-        if np.nansum(np.abs(np.array([first, last], dtype=float)))  == cdfy.size:
+
+        if np.nansum(np.abs(np.array([first, last], dtype=float))) == cdfy.size:
             raise ValueError(&#39;All grid points between a, b are invalid.&#39;)
-            
+
         # Final x, y
         cdfx = cdfx[first:last]
         cdfy = cdfy[first:last]
-        
+
         # New valid a, b (support of the cdf)
         self.a, self.b = cdfx[0], cdfx[-1]
-        
+
         # Support of the ppf
         self.ppfa, self.ppfb = cdfy[0], cdfy[-1]
-        
-        # Real grid density (some of the points might have been excluded as invalid)
+
+        # Real grid density (some points might have been excluded as invalid)
         self.grid_density = cdfx.size
-        
+
         # Since the cdf is already evaluated, we can also just store it
         # to use it for fast cdf approximation (self.cdf(method=&#39;fast&#39;)
         self._cdf_fast = interp1d(cdfx, cdfy, bounds_error=False,
                                   fill_value=(np.nan))
-        
-        return interp1d(cdfy, cdfx, bounds_error=False, fill_value=(-np.inf, np.inf))
-    </code></pre>
+
+        return interp1d(cdfy, cdfx, bounds_error=False,
+                        fill_value=(-np.inf, np.inf))
+
+
+def make_unique(array, dist=&#39;max&#39;, mode=&#39;raise&#39;, assume_sorted=True,
+                inplace=False, random_state=None):
+    &#34;&#34;&#34;
+    UTILITY FUNCTION TO FORCE LATTICE VALUES TO HAVE NON-REPEATING ELEMENTS
+
+    Finds duplicate values in `array` and shifts them at most by `dist`
+    to get an array of all unique values. Shifts are sampled randomly from
+    uniform distribution.
+
+    If `dist` is not smaller or equal to half the smallest distance between
+    two non-duplicates, a duplicate point + noise could &#34;jump behind&#34; the next
+    non-duplicate. E.g. for array [0, 1, 1, 2, 3] and `dist` = 1.5 the result
+    could be np.sort([0, 1, 2.5, 2, 3]), i.e. the second occurrence of number 1
+    was augmented by noise of 1.5 magnitude and in result it jumped to
+    position 2.5 which is larger than 2, which was one of the original
+    non-duplicate values. (This is an extreme example)
+
+    NOTICE: there is no good way to implement this function as it changes the
+    provided data to fullfill the assumption on non-repeating values. Whether
+    it is a good idea to do it this way or some other way highly depends on
+    use case. So make sure you know what you are doing.
+
+    Parameters
+    ----------
+
+    array : 1D numpy array
+        Array with potential of having duplicate elements.
+
+    dist : float or &#39;max&#39;, default &#39;max&#39;
+        Max allowed shift of a duplicate point. If &#39;max&#39; is used
+        the `max_dist` = 1/2 min distance between two non-duplicates.
+
+    mode : one of {&#39;raise&#39;, &#39;clip&#39;, &#39;ignore&#39;, &#39;warn&#39;}, default &#39;raise&#39;
+        Behavior when specified `dist` is larger than `max_dist`.
+        &#39;raise&#39;  - raises a ValueError
+        &#39;clip&#39;   - clips the `dist` to `max_dist`
+        &#39;ignore&#39; - will use `dist` no matter the consequences, use with caution
+        &#39;warn&#39;   - same as ignore, just a warning is issued
+
+    assume_sorted : bool, default True
+        If not, we sort at the beginning.
+
+    inplace : bool, default False
+        If True, adjust array inplace, otherwise make a copy.
+
+    random_state : RandomState, int, or None, default None
+        Seed or generator for noise generation.
+
+    Returns
+    -------
+
+    array: sorted 1D numpy array with no duplicates
+        If `inplace=True`, returns None
+    &#34;&#34;&#34;
+
+    if not inplace:
+        array = array.copy()
+
+    if not assume_sorted:
+        array.sort()
+
+    _min, _max = array[0], array[-1]
+    diff = np.ediff1d(array, to_end=np.abs(_max))
+
+    if assume_sorted and np.any(diff &lt; 0):
+        raise ValueError(&#39;If `assume_sorted=True` array must be sorted.&#39;)
+
+    # Find all duplicates (bool mask with True if element is a duplicate)
+    dupl = diff == 0
+
+    # No work if no duplicates
+    n_duplicates = dupl.sum()
+    if n_duplicates == 0:
+        return array
+
+    # Min and Max must be treated separately
+    where_min = array == _min
+    where_max = array == _max
+
+    # Choosing the dist
+    max_dist = diff[np.logical_not(dupl)].min() / 2
+    dist = max_dist if dist == &#39;max&#39; else dist
+
+    # Choosing the magnitude of the uniform noise
+    if dist &gt; max_dist:
+        if mode == &#39;raise&#39;:
+            raise ValueError(
+                f&#39;dist &gt; max_dist ({dist} &gt; {max_dist}). &#39;
+                &#39;Make dist smaller or manage this behavior &#39;
+                &#39;by changing the value of the mode argument.&#39;)
+        elif mode == &#39;clip&#39;:
+            dist = max_dist
+        elif mode == &#39;warn&#39;:
+            warnings.warn(f&#39;dist &gt; max_dist ({dist} &gt; {max_dist}).&#39;)
+        elif mode == &#39;ignore&#39;:
+            pass
+        else:
+            raise NotImplementedError(f&#39;Passing mode={mode} is not supported.&#39;)
+
+    if isinstance(random_state, int) or random_state is None:
+        random_state = np.random.RandomState(seed=random_state)
+
+    # Adding noise
+    change = dupl &amp; np.logical_not(where_min | where_max)
+    array[change] += random_state.uniform(-max_dist, max_dist, change.sum())
+    change = dupl &amp; where_max
+    array[change] += random_state.uniform(-max_dist, 0, change.sum())
+    change = dupl &amp; where_min
+    array[change] += random_state.uniform(0, max_dist, change.sum())
+
+    array.sort()
+    if inplace:
+        return
+    return array
+
+
+def save_redistributor(d, path):
+    &#34;&#34;&#34;Saves the Redistributor object to a file.&#34;&#34;&#34;
+    import joblib
+    joblib.dump(d, path)
+
+
+def load_redistributor(path):
+    &#34;&#34;&#34;Loads the Redistributor object from a file.&#34;&#34;&#34;
+    import joblib
+    return joblib.load(path)</code></pre>
 </details>
 </section>
 <section>
@@ -1145,175 +1188,124 @@ class KernelDensity():
 </details>
 </dd>
 <dt id="redistributor.make_unique"><code class="name flex">
-<span>def <span class="ident">make_unique</span></span>(<span>array, random_state, mode='spread', duplicates=None)</span>
+<span>def <span class="ident">make_unique</span></span>(<span>array, dist='max', mode='raise', assume_sorted=True, inplace=False, random_state=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Takes a sorted array and adjusts the duplicate values such that all
-elements of the array are unique. The adjustment is done by linearly
-separating the duplicates. Read more in docsting of <code>_get_intervals</code>.</p>
-<p>In case <code>mode='keep'</code> this function does nothing and returns the array.</p>
-<p>Supports two deterministic modes 'spread' and 'cluster'. These two
-define onto how large interval the valueas are spread. If 'cluster'
-is not possible 'spread' is used implicitly.</p>
-<p>In case there are too many duplicates (&gt;5e3), first uses addition of
-random noise to non-min and non-max values and then continues with the
-deterministic method.</p>
-<p>Keeps the min, max, and unique values unchanged.
-If the first iteration did not make all elements unique, repeats until
-failure and warns the user (should be rare).</p>
+<div class="desc"><p>UTILITY FUNCTION TO FORCE LATTICE VALUES TO HAVE NON-REPEATING ELEMENTS</p>
+<p>Finds duplicate values in <code>array</code> and shifts them at most by <code>dist</code>
+to get an array of all unique values. Shifts are sampled randomly from
+uniform distribution.</p>
+<p>If <code>dist</code> is not smaller or equal to half the smallest distance between
+two non-duplicates, a duplicate point + noise could "jump behind" the next
+non-duplicate. E.g. for array [0, 1, 1, 2, 3] and <code>dist</code> = 1.5 the result
+could be np.sort([0, 1, 2.5, 2, 3]), i.e. the second occurrence of number 1
+was augmented by noise of 1.5 magnitude and in result it jumped to
+position 2.5 which is larger than 2, which was one of the original
+non-duplicate values. (This is an extreme example)</p>
+<p>NOTICE: there is no good way to implement this function as it changes the
+provided data to fullfill the assumption on non-repeating values. Whether
+it is a good idea to do it this way or some other way highly depends on
+use case. So make sure you know what you are doing.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>array</code></strong> :&ensp;<code>1D numpy array</code></dt>
-<dd>Sorted array with potential of having non-unique elements.</dd>
-<dt><strong><code>random_state</code></strong> :&ensp;<code>RandomState</code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>mode</code></strong> :&ensp;<code>str, one</code> of <code>{'keep', 'spread', 'cluster', 'noise'}</code></dt>
-<dd>&nbsp;</dd>
+<dd>Array with potential of having duplicate elements.</dd>
+<dt><strong><code>dist</code></strong> :&ensp;<code>float</code> or <code>'max'</code>, default <code>'max'</code></dt>
+<dd>Max allowed shift of a duplicate point. If 'max' is used
+the <code>max_dist</code> = 1/2 min distance between two non-duplicates.</dd>
+<dt><strong><code>mode</code></strong> :&ensp;<code>one</code> of <code>{'raise', 'clip', 'ignore', 'warn'}</code>, default <code>'raise'</code></dt>
+<dd>Behavior when specified <code>dist</code> is larger than <code>max_dist</code>.
+'raise'
+- raises a ValueError
+'clip'
+- clips the <code>dist</code> to <code>max_dist</code>
+'ignore' - will use <code>dist</code> no matter the consequences, use with caution
+'warn'
+- same as ignore, just a warning is issued</dd>
+<dt><strong><code>assume_sorted</code></strong> :&ensp;<code>bool</code>, default <code>True</code></dt>
+<dd>If not, we sort at the beginning.</dd>
+<dt><strong><code>inplace</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>If True, adjust array inplace, otherwise make a copy.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>RandomState, int,</code> or <code>None</code>, default <code>None</code></dt>
+<dd>Seed or generator for noise generation.</dd>
 </dl>
-<p>'keep' produces discontinuous cdf (cdf with vertical jumps)
-because it just simply keeps the non unique values
-'spread' is deterministic but slow to compute,
-it separates the non unique values equidistantly and
-tries to use all the available space between consecutive values.
-'cluster' is deterministic and also slow to compute,
-it separates the non unique values equidistantly but
-it does only use a small space around the value.
-'noise' is fast, very similar to 'cluster', but nondeterministic
-because it involves randomness and it handles min and max values
-separately to avoid jumping out of the a,b interval.</p>
-<p>duplicates: int, number of duplicates in previous iteration.
-Do not use, used only for recursion.</p>
 <h2 id="returns">Returns</h2>
-<p>Sorted array of unique elements on the orignal interval.</p></div>
+<dl>
+<dt><strong><code>array</code></strong> :&ensp;<code>sorted 1D numpy array with no duplicates</code></dt>
+<dd>If <code>inplace=True</code>, returns None</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def make_unique(array, random_state, mode=&#39;spread&#39;, duplicates=None):
+<pre><code class="python">def make_unique(array, dist=&#39;max&#39;, mode=&#39;raise&#39;, assume_sorted=True,
+                inplace=False, random_state=None):
     &#34;&#34;&#34;
-    Takes a sorted array and adjusts the duplicate values such that all
-    elements of the array are unique. The adjustment is done by linearly
-    separating the duplicates. Read more in docsting of `_get_intervals`.
+    UTILITY FUNCTION TO FORCE LATTICE VALUES TO HAVE NON-REPEATING ELEMENTS
 
-    In case `mode=&#39;keep&#39;` this function does nothing and returns the array.
+    Finds duplicate values in `array` and shifts them at most by `dist`
+    to get an array of all unique values. Shifts are sampled randomly from
+    uniform distribution.
 
-    Supports two deterministic modes &#39;spread&#39; and &#39;cluster&#39;. These two
-    define onto how large interval the valueas are spread. If &#39;cluster&#39;
-    is not possible &#39;spread&#39; is used implicitly.
+    If `dist` is not smaller or equal to half the smallest distance between
+    two non-duplicates, a duplicate point + noise could &#34;jump behind&#34; the next
+    non-duplicate. E.g. for array [0, 1, 1, 2, 3] and `dist` = 1.5 the result
+    could be np.sort([0, 1, 2.5, 2, 3]), i.e. the second occurrence of number 1
+    was augmented by noise of 1.5 magnitude and in result it jumped to
+    position 2.5 which is larger than 2, which was one of the original
+    non-duplicate values. (This is an extreme example)
 
-    In case there are too many duplicates (&gt;5e3), first uses addition of
-    random noise to non-min and non-max values and then continues with the
-    deterministic method.
-
-    Keeps the min, max, and unique values unchanged.
-    If the first iteration did not make all elements unique, repeats until
-    failure and warns the user (should be rare).
-
+    NOTICE: there is no good way to implement this function as it changes the
+    provided data to fullfill the assumption on non-repeating values. Whether
+    it is a good idea to do it this way or some other way highly depends on
+    use case. So make sure you know what you are doing.
 
     Parameters
     ----------
-    array: 1D numpy array
-        Sorted array with potential of having non-unique elements.
 
-    random_state: RandomState
+    array : 1D numpy array
+        Array with potential of having duplicate elements.
 
-    mode: str, one of {&#39;keep&#39;, &#39;spread&#39;, &#39;cluster&#39;, &#39;noise&#39;}
-      &#39;keep&#39; produces discontinuous cdf (cdf with vertical jumps)
-          because it just simply keeps the non unique values
-      &#39;spread&#39; is deterministic but slow to compute,
-          it separates the non unique values equidistantly and
-          tries to use all the available space between consecutive values.
-      &#39;cluster&#39; is deterministic and also slow to compute,
-          it separates the non unique values equidistantly but
-          it does only use a small space around the value.
-      &#39;noise&#39; is fast, very similar to &#39;cluster&#39;, but nondeterministic
-          because it involves randomness and it handles min and max values
-          separately to avoid jumping out of the a,b interval.
+    dist : float or &#39;max&#39;, default &#39;max&#39;
+        Max allowed shift of a duplicate point. If &#39;max&#39; is used
+        the `max_dist` = 1/2 min distance between two non-duplicates.
 
-    duplicates: int, number of duplicates in previous iteration.
-        Do not use, used only for recursion.
+    mode : one of {&#39;raise&#39;, &#39;clip&#39;, &#39;ignore&#39;, &#39;warn&#39;}, default &#39;raise&#39;
+        Behavior when specified `dist` is larger than `max_dist`.
+        &#39;raise&#39;  - raises a ValueError
+        &#39;clip&#39;   - clips the `dist` to `max_dist`
+        &#39;ignore&#39; - will use `dist` no matter the consequences, use with caution
+        &#39;warn&#39;   - same as ignore, just a warning is issued
 
+    assume_sorted : bool, default True
+        If not, we sort at the beginning.
+
+    inplace : bool, default False
+        If True, adjust array inplace, otherwise make a copy.
+
+    random_state : RandomState, int, or None, default None
+        Seed or generator for noise generation.
 
     Returns
-    --------
-    Sorted array of unique elements on the orignal interval.
+    -------
+
+    array: sorted 1D numpy array with no duplicates
+        If `inplace=True`, returns None
     &#34;&#34;&#34;
 
-    if mode == &#39;keep&#39;:
-        return array
+    if not inplace:
+        array = array.copy()
 
-    def _get_intervals(array, diff):
-        &#34;&#34;&#34;
-        Iterates over the diff of the array, when it finds a duplicate
-        value (i.e., when diff == 0), it adds it to the result dict and
-        finds the interval onto which the duplicates can be spread such
-        that the value does not jump over previous/next value or it&#39;s
-        intrval. If two duplicate values are right after each other, they
-        share the interval between them based on number of duplicates each
-        of tham has. Note that with array [2, 2] the number of duplicates
-        of the value 2 is counted as 1. The other is original.
+    if not assume_sorted:
+        array.sort()
 
-        Returns
-        -------
-        dict {value: [n: int, n of val duplicates,
-                      i: int, first index of duplicate value,
-                      j: int, last index of duplicate value,
-                      a: int, start of safe interval,
-                      b: int, end of safe interval]}
-
-        Example
-        -------
-
-        array = [0,0,1,3,4,6,6,6,7,7,9,9]
-        diff  = [0,1,2,1,2,0,0,1,0,2,0,9]
-        r = {
-            0: [1, 0, 1, 0, 1],
-            6: [2, 5, 7, 4, 6.666666666666667],
-            7: [1, 8, 9, 6.666666666666667, 7.923076923076923],
-            9: [1, 10, 11, 7.923076923076923, 9]}
-        &#34;&#34;&#34;
-        r = {}
-        n = 0
-        prev = v = i = j = a = b = None
-        for p, (d, dd) in enumerate(zip(diff, diff[1:])):
-            if d == 0:  # Duplicate value
-                v = array[p]
-                if n == 0:  # First occurence
-                    a = array[p] if p == 0 else array[p - 1]
-                    i = p  # First occurence index
-                n += 1
-                if dd != 0:  # Last occurence
-                    b = array[p + 2] if p + 2 &lt; array.size else array[p + 1]
-                    j = p + 1  # Last occurence index
-
-                    # Two duplicates next to each other must share interval
-                    # Proportion for each is assigned based on their counts
-                    if prev is not None and v == r[prev][4]:
-                        pn = r[prev][0]  # Previous n
-                        d1 = prev - r[prev][3]  # Interval left of prev
-                        d2 = v - prev  # Interval left of current value
-                        d3 = b - v  # Interval right of current value
-                        pw = (pn * d2) / (d1 + d2)  # weight of prev val
-                        cw = (n * d2) / (d2 + d3)  # weight of current val
-                        a = prev + (d2 * pw) / (pw + cw)
-                        r[prev][4] = a  # Adjust previous val&#39;s b value
-
-                    # Store result and restart counters
-                    r[v] = [n, i, j, a, b]  # Mutable for adjustments
-                    prev = v
-                    v = i = j = a = b = None
-                    n = 0
-        return r
-
-    eps = 1e3 * np.finfo(array.dtype).eps
-
-    # Assuming sorted array
     _min, _max = array[0], array[-1]
     diff = np.ediff1d(array, to_end=np.abs(_max))
-    if np.any(diff &lt; 0):
-        raise ValueError(&#39;Array must be sorted.&#39;)
 
-    # Find all duplicates
+    if assume_sorted and np.any(diff &lt; 0):
+        raise ValueError(&#39;If `assume_sorted=True` array must be sorted.&#39;)
+
+    # Find all duplicates (bool mask with True if element is a duplicate)
     dupl = diff == 0
 
     # No work if no duplicates
@@ -1321,47 +1313,45 @@ Do not use, used only for recursion.</p>
     if n_duplicates == 0:
         return array
 
-    if n_duplicates == duplicates:
-        warnings.warn((
-            f&#39;Returning non-unique. Unable to remove {n_duplicates} &#39;
-            f&#39;({(n_duplicates / array.size) * 100}%) duplicates.&#39;))
-        return array
+    # Min and Max must be treated separately
+    where_min = array == _min
+    where_max = array == _max
 
-    warnings.warn(
-        (f&#39;Adjusting {n_duplicates / array.size * 100}% non-unique &#39;
-         &#39;lattice values. Avoid learning discrete distributions.&#39;))
+    # Choosing the dist
+    max_dist = diff[np.logical_not(dupl)].min() / 2
+    dist = max_dist if dist == &#39;max&#39; else dist
 
-    if (n_duplicates &gt; int(5e3) or mode == &#39;noise&#39;) and duplicates is None:
-        warnings.warn((
-            f&#39;Array has too many duplicates ({n_duplicates}) &#39;
-            &#39;to use the deterministic algorithm. Solving some &#39;
-            &#39;or all by adding small random noise.&#39;))
-        change = dupl &amp; np.logical_not((array == _min) | (array == _max))
-        array[change] += random_state.uniform(eps, 10 * eps, change.sum())
-        return make_unique(
-            np.sort(array), random_state, mode, n_duplicates)
-    else:
-        # If there is not that many duplicates, we use
-        # this method, which would be otherwise slower.
-        intervals = _get_intervals(array, diff)
-        for k, v in intervals.items():
-            n, i, j, a, b = v
-            if mode == &#39;cluster&#39;:
-                a = np.max([a, k - n * eps])
-                b = np.min([b, k + n * eps])
+    # Choosing the magnitude of the uniform noise
+    if dist &gt; max_dist:
+        if mode == &#39;raise&#39;:
+            raise ValueError(
+                f&#39;dist &gt; max_dist ({dist} &gt; {max_dist}). &#39;
+                &#39;Make dist smaller or manage this behavior &#39;
+                &#39;by changing the value of the mode argument.&#39;)
+        elif mode == &#39;clip&#39;:
+            dist = max_dist
+        elif mode == &#39;warn&#39;:
+            warnings.warn(f&#39;dist &gt; max_dist ({dist} &gt; {max_dist}).&#39;)
+        elif mode == &#39;ignore&#39;:
+            pass
+        else:
+            raise NotImplementedError(f&#39;Passing mode={mode} is not supported.&#39;)
 
-            # Using size n+1+n%2 to avoid a and k in lin
-            lin = np.linspace(a, b, n + 1 + n % 2, endpoint=False,
-                              dtype=array.dtype)[1 + n % 2:]
-            if k in lin:  # Accidentely linspace falls on k
-                lin = np.sort(np.random.uniform(a, b, n))
-            assert a not in lin and k not in lin, (
-                &#39;a or k in lin, this is a bug. Pls report. &#39;
-                f&#39; {k}, {n}, {a}, {b}, {lin}&#39;)
-            array[i:j] = lin
+    if isinstance(random_state, int) or random_state is None:
+        random_state = np.random.RandomState(seed=random_state)
 
-        return make_unique(
-            np.sort(array), random_state, mode, n_duplicates)</code></pre>
+    # Adding noise
+    change = dupl &amp; np.logical_not(where_min | where_max)
+    array[change] += random_state.uniform(-max_dist, max_dist, change.sum())
+    change = dupl &amp; where_max
+    array[change] += random_state.uniform(-max_dist, 0, change.sum())
+    change = dupl &amp; where_min
+    array[change] += random_state.uniform(0, max_dist, change.sum())
+
+    array.sort()
+    if inplace:
+        return
+    return array</code></pre>
 </details>
 </dd>
 <dt id="redistributor.plot_cdf_ppf_pdf"><code class="name flex">
@@ -1509,14 +1499,16 @@ The same grid is used for CDF fast and PPF. The user specified
 value of grid_density is not it's final value. It is updated
 during initialization of this object on call of <code>self._get_ppf()</code>.</dd>
 <dt><strong><code>cdf_method</code></strong> :&ensp;<code>str, one</code> of <code>{'precise', 'fast'}</code></dt>
-<dd>Specifies the default method to be used when self.cdf() is called.</dd>
+<dd>Specifies the default method to be used when self.cdf() is called.
+'precise' computes cdf using a formula, 'fast' uses a precomputed
+interpolant to get a fast approximation.</dd>
 <dt><strong><code>name</code></strong> :&ensp;<code>str</code>, default <code>'LearnedDistribution'</code></dt>
 <dd>The name of the instance.</dd>
 </dl>
-<p>kwargs : all other keyword arguments accepted by sklearn.neighbors.KernelDensity.</p>
+<p>kwargs : keyword arguments accepted by sklearn.neighbors.KernelDensity.</p>
 <h2 id="methods">Methods</h2>
 <p>pdf : Probability Density Function of a Gaussian Mixture
-cdf : Cumulative Density Function of a Gaussian Mixture (or its approximation)
+cdf : Cumulative Distribution Function of a Gaussian Mixture
 ppf : Approximation of a Percent Point Function of a Gaussian Mixture
 rvs : Random sample generator</p></div>
 <details class="source">
@@ -1525,187 +1517,218 @@ rvs : Random sample generator</p></div>
 </summary>
 <pre><code class="python">class KernelDensity():
     &#34;&#34;&#34;
-    Wrapper around KernelDensity for ease of use as a source or 
+    Wrapper around KernelDensity for ease of use as a source or
     target distribution of Redistributor. It extends the KDE by
     providing cdf and ppf functions.
-    
-    Only supports 1D input because Redistributor also works only in 1D. 
+
+    Only supports 1D input because Redistributor also works only in 1D.
     Only supports gaussian kernel. CDF supports two methods, precise and fast.
     CDF precise is computed using a formula. CDF fast is a linear interpolation
     of the CDF precise on a grid of specified density. There is no explicit
     formula for PPF of gaussian mixutre, so here it is approximated using
     linear interpolation of the CDF precise on a grid of specified density.
-    
+
     Parameters
     ----------
 
     x : numeric or 1D numpy array
         1D vector of which the distribution will be estimated.
-        
+
     ravel_x : bool, default True
         KDE requires 1D arrays. So the `x` is by default
         flattened to 1D using `np.ravel()`.
-        
+
     grid_density : int
-        User specified number of grid points on which the CDF is computed 
+        User specified number of grid points on which the CDF is computed
         precisely in order to build the interpolants for fast CDF and PPF.
         The same grid is used for CDF fast and PPF. The user specified
         value of grid_density is not it&#39;s final value. It is updated
         during initialization of this object on call of `self._get_ppf()`.
-    
+
     cdf_method : str, one of {&#39;precise&#39;, &#39;fast&#39;}
         Specifies the default method to be used when self.cdf() is called.
-    
+        &#39;precise&#39; computes cdf using a formula, &#39;fast&#39; uses a precomputed
+        interpolant to get a fast approximation.
+
     name : str, default &#39;LearnedDistribution&#39;
             The name of the instance.
-            
-    kwargs : all other keyword arguments accepted by sklearn.neighbors.KernelDensity.
-    
-    
+
+    kwargs : keyword arguments accepted by sklearn.neighbors.KernelDensity.
+
+
     Methods
     -------
-    
+
     pdf : Probability Density Function of a Gaussian Mixture
-    cdf : Cumulative Density Function of a Gaussian Mixture (or its approximation)
+    cdf : Cumulative Distribution Function of a Gaussian Mixture
     ppf : Approximation of a Percent Point Function of a Gaussian Mixture
     rvs : Random sample generator
     &#34;&#34;&#34;
-    
-    def __init__(self, x, ravel_x=True, grid_density=int(1e4), cdf_method=&#39;fast&#39;, 
-                 name=&#39;KDE&#39;, **kwargs):
-        
+
+    def __init__(self, x, ravel_x=True, grid_density=int(1e4),
+                 cdf_method=&#39;fast&#39;, name=&#39;KDE&#39;, **kwargs):
+
         self.name = name
-        
+
         if kwargs.get(&#39;kernel&#39;) not in [None, &#39;gaussian&#39;]:
-            raise ValueError(&#39;Only gaussian kernel is supported in this wrapper.&#39;)
-            
+            raise ValueError(&#39;Only gaussian kernel is supported here.&#39;)
+
         # Fitting the KDE
         x = np.asarray(x)
         if ravel_x:
             x = x.ravel()
         self._validate_shape(x)
-        self.kde = ScikitKDE(**kwargs).fit(x.reshape(-1,1))
-        
+        self.kde = ScikitKDE(**kwargs).fit(x.reshape(-1, 1))
+
         # Approximation of cdf with linear interpolation
         self.cdf_method = cdf_method
         self._cdf_fast = None  # Computed during call of _get_ppf()
-        
+
         # Controls the ppf approximation precision
         if grid_density &lt; 10:  # 10 is already unreasonably small
             raise ValueError(&#39;Grid density too small.&#39;)
         self.grid_density = grid_density
         self._ppf = self._get_ppf()
-        
+
     def _validate_shape(self, data):
         if not data.ndim == 1:
             raise ValueError(&#39;Input array must be 1D. You can use x.ravel().&#39;)
-            
+
     def _get_support(self, *args):
         return self.a, self.b
-    
+
     def _get_support_ppf(self, *args):
         return self.ppfa, self.ppfb
-    
+
     def rvs(self, size=1, random_state=None):
         &#34;&#34;&#34;
         Random sample from the estimated distribution.
         &#34;&#34;&#34;
         return self.kde.sample(size, random_state).ravel()
-    
+
     def pdf(self, x):
         &#34;&#34;&#34;
         Probability density function of the estimated distribution.
+
+        Parameters
+        ----------
+        q : array_like
+            quantile
+
+        Returns
+        -------
+        d : 1D numpy array of floats
+            Probability density function evaluated at `q`.
+            I.e. probability density corresponding to the quantile q.
         &#34;&#34;&#34;
+
         x = np.asarray(x)
         if x.ndim == 0:
             x = x.reshape(1)
         self._validate_shape(x)
-        return np.exp(self.kde.score_samples(x.reshape(-1, 1)))   
-        
-    def cdf(self, k, method=None):
-        &#34;&#34;&#34; 
-        Cummulative density function of the estimated distribution.
+        return np.exp(self.kde.score_samples(x.reshape(-1, 1)))
+
+    def cdf(self, q, method=None):
+        &#34;&#34;&#34;
+        Cumulative distribution function of the estimated distribution.
+
+        Parameters
+        ----------
+        q : array_like
+            quantile
+
+        Returns
+        -------
+        p : 1D numpy array of floats
+            Cumulative distribution function evaluated at `q`.
+            I.e. lower tail probability corresponding to the quantile q.
         &#34;&#34;&#34;
         method = method or self.cdf_method
-        
+
         if method == &#39;fast&#39;:
-            fast = self._cdf_fast(k)
-            # Handling out of support k by computing it precisely
+            fast = self._cdf_fast(q)
+            # Handling out of support q by computing it precisely
             # out_of_support.sum() gives the number of out_of_support values
             out_of_support = np.isnan(fast)
             if out_of_support.any():
-                fast[out_of_support] = self.cdf(k[out_of_support], method=&#39;precise&#39;)
+                fast[out_of_support] = \
+                    self.cdf(q[out_of_support], method=&#39;precise&#39;)
             return fast
-        
+
         elif method == &#39;precise&#39;:
             data = np.asarray(self.kde.tree_.data)
             out = 0.0
             for data_point in data:
-                out += norm.cdf(k, loc=data_point, scale=self.kde.bandwidth)
+                out += norm.cdf(q, loc=data_point, scale=self.kde.bandwidth)
             return out / data.size
-        
+
         else:
-            raise NotImplementedError(&#39;Method must be one of {&#34;fast&#34;, &#34;precise&#34;}&#39;)
-            
-    def ppf(self, q):
+            raise NotImplementedError(&#39;Method not it {&#34;fast&#34;, &#34;precise&#34;}&#39;)
+
+    def ppf(self, p):
         &#34;&#34;&#34;
+        Percent point function of the estimated distribution.
         This method approximates the ppf based on linear interpolation
         of the cdf on self.grid_density many points. There is no formula
         for precise computation of gaussian mixture ppf. Therefore, if
         we wanted a precise function, we would need to bisect the cdf.
         Bisecting is very slow in comparison to just computing the cdf
         on a grid and using the interpolant to approximate the ppf.
+
+        Parameters
+        ----------
+        p : array_like
+            lower tail probability
+
+        Returns
+        -------
+        q : 1D numpy array of floats
+            Percent point function evaluated at `p`.
+            I.e. quantile corresponding to the lower tail probability p.
         &#34;&#34;&#34;
-        q = np.asarray(q)
-        if (q &lt; 0).any() or (q &gt; 1).any():
-            raise ValueError(&#39;Value in q out of PPF support (0, 1).&#39;)
-        return self._ppf(q)
+        p = np.asarray(p)
+        if (p &lt; 0).any() or (p &gt; 1).any():
+            raise ValueError(&#39;Value in p out of PPF support (0, 1).&#39;)
+        return self._ppf(p)
 
     def _get_ppf(self):
         &#34;&#34;&#34;
-        In order to get a fast ppf function, we will sample
-        the cdf on its support using a grid of desired density.
-        Then we create an interpolant which maps the values
-        inversly, thus getting an approximation to a ppf func.
-        
-        Theoretically, ppf(0), ppf(1) must map to -inf, +inf.
-        We can not interpolate to infinite values, therefore,
-        for the ppf range, we pick the closest finite values 
-        from the grid. Everything outside will be set to ±inf.
-        
-        This way we obtain a precise enough interpolant which
-        also maps the 0 and 1 to ±inf. 
+        In order to get a fast ppf function, we will sample the cdf on its
+        support using a grid of desired density. Then we create an interpolant
+        which maps the values inversly, thus getting an approximation to a ppf.
+
+        Theoretically, ppf(0), ppf(1) must map to -inf, +inf. We can not
+        interpolate to infinite values, therefore, for the ppf range, we pick
+        the closest finite values from the grid. Everything outside will be
+        set to ±inf. This way we obtain a precise enough interpolant which
+        also maps the 0 and 1 to ±inf.
         &#34;&#34;&#34;
 
         def argvalid(arr):
             &#34;&#34;&#34;
-            Returns 2-tuple of indices `first` and `last`
-            which can be used to slice `arr` to get only
-            valid values (0+ε &lt; valid &lt; 1-ε). Function assumes
-            `arr` is sorted and finite. ε is a multiple of 
-            the tiniest number which can be represented in 
-            float64. In theory ε could be 0, but we get
-            numerical instabilities when interpolating later.
-            If all values from left side are valid, first = 0.
-            If all values from right side are valid, last = None.
+            Returns 2-tuple of indices `first` and `last` which can be used to
+            slice `arr` to get only valid values (0 &lt; valid &lt; 1). Function
+            assumes `arr` is sorted and finite. If all values from left side
+            are valid, first = 0. If all values from right side are valid,
+            last = None.
             &#34;&#34;&#34;
-            v = arr &gt; 0 #10 * np.finfo(np.float64).tiny
-            w = arr &lt; 1 #- 10 * np.finfo(np.float64).tiny
+            v = arr &gt; 0
+            w = arr &lt; 1
             first = v.size - v.sum()
             last = w.sum() - w.size
             last = None if last == 0 else last
             return first, last
-        
+
         # Computing the empirical range of the ppf
-        # Bandwidth * 39 is just an empirical distance from the mean 
+        # Bandwidth * 39 is just an empirical distance from the mean
         # of a gaussian which maps to 0 due to floating point precision.
         # Therefore a, b is just a bit bigger than an empirical
         # ppf range (or cdf support).
-        
+
         # Approximate a, b
         a = np.min(self.kde.tree_.data) - self.kde.bandwidth * 39
         b = np.max(self.kde.tree_.data) + self.kde.bandwidth * 39
-        
+
         # Since a, b is a bit bigger than the cdf support
         # a few of the first cdfx values will all map to 0
         # and a few of the last cdfx values will all map to 1.
@@ -1714,72 +1737,107 @@ rvs : Random sample generator</p></div>
         cdfx = np.linspace(a, b, self.grid_density)  # grid
         cdfy = self.cdf(cdfx, method=&#39;precise&#39;)
         first, last = argvalid(cdfy)
-        
-        if np.nansum(np.abs(np.array([first, last], dtype=float)))  == cdfy.size:
+
+        if np.nansum(np.abs(np.array([first, last], dtype=float))) == cdfy.size:
             raise ValueError(&#39;All grid points between a, b are invalid.&#39;)
-            
+
         # Final x, y
         cdfx = cdfx[first:last]
         cdfy = cdfy[first:last]
-        
+
         # New valid a, b (support of the cdf)
         self.a, self.b = cdfx[0], cdfx[-1]
-        
+
         # Support of the ppf
         self.ppfa, self.ppfb = cdfy[0], cdfy[-1]
-        
-        # Real grid density (some of the points might have been excluded as invalid)
+
+        # Real grid density (some points might have been excluded as invalid)
         self.grid_density = cdfx.size
-        
+
         # Since the cdf is already evaluated, we can also just store it
         # to use it for fast cdf approximation (self.cdf(method=&#39;fast&#39;)
         self._cdf_fast = interp1d(cdfx, cdfy, bounds_error=False,
                                   fill_value=(np.nan))
-        
-        return interp1d(cdfy, cdfx, bounds_error=False, fill_value=(-np.inf, np.inf))</code></pre>
+
+        return interp1d(cdfy, cdfx, bounds_error=False,
+                        fill_value=(-np.inf, np.inf))</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
 <dt id="redistributor.KernelDensity.cdf"><code class="name flex">
-<span>def <span class="ident">cdf</span></span>(<span>self, k, method=None)</span>
+<span>def <span class="ident">cdf</span></span>(<span>self, q, method=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Cummulative density function of the estimated distribution.</p></div>
+<div class="desc"><p>Cumulative distribution function of the estimated distribution.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>q</code></strong> :&ensp;<code>array_like</code></dt>
+<dd>quantile</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>p</code></strong> :&ensp;<code>1D numpy array</code> of <code>floats</code></dt>
+<dd>Cumulative distribution function evaluated at <code>q</code>.
+I.e. lower tail probability corresponding to the quantile q.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def cdf(self, k, method=None):
-    &#34;&#34;&#34; 
-    Cummulative density function of the estimated distribution.
+<pre><code class="python">def cdf(self, q, method=None):
+    &#34;&#34;&#34;
+    Cumulative distribution function of the estimated distribution.
+
+    Parameters
+    ----------
+    q : array_like
+        quantile
+
+    Returns
+    -------
+    p : 1D numpy array of floats
+        Cumulative distribution function evaluated at `q`.
+        I.e. lower tail probability corresponding to the quantile q.
     &#34;&#34;&#34;
     method = method or self.cdf_method
-    
+
     if method == &#39;fast&#39;:
-        fast = self._cdf_fast(k)
-        # Handling out of support k by computing it precisely
+        fast = self._cdf_fast(q)
+        # Handling out of support q by computing it precisely
         # out_of_support.sum() gives the number of out_of_support values
         out_of_support = np.isnan(fast)
         if out_of_support.any():
-            fast[out_of_support] = self.cdf(k[out_of_support], method=&#39;precise&#39;)
+            fast[out_of_support] = \
+                self.cdf(q[out_of_support], method=&#39;precise&#39;)
         return fast
-    
+
     elif method == &#39;precise&#39;:
         data = np.asarray(self.kde.tree_.data)
         out = 0.0
         for data_point in data:
-            out += norm.cdf(k, loc=data_point, scale=self.kde.bandwidth)
+            out += norm.cdf(q, loc=data_point, scale=self.kde.bandwidth)
         return out / data.size
-    
+
     else:
-        raise NotImplementedError(&#39;Method must be one of {&#34;fast&#34;, &#34;precise&#34;}&#39;)</code></pre>
+        raise NotImplementedError(&#39;Method not it {&#34;fast&#34;, &#34;precise&#34;}&#39;)</code></pre>
 </details>
 </dd>
 <dt id="redistributor.KernelDensity.pdf"><code class="name flex">
 <span>def <span class="ident">pdf</span></span>(<span>self, x)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Probability density function of the estimated distribution.</p></div>
+<div class="desc"><p>Probability density function of the estimated distribution.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>q</code></strong> :&ensp;<code>array_like</code></dt>
+<dd>quantile</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>d</code></strong> :&ensp;<code>1D numpy array</code> of <code>floats</code></dt>
+<dd>Probability density function evaluated at <code>q</code>.
+I.e. probability density corresponding to the quantile q.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1787,41 +1845,77 @@ rvs : Random sample generator</p></div>
 <pre><code class="python">def pdf(self, x):
     &#34;&#34;&#34;
     Probability density function of the estimated distribution.
+
+    Parameters
+    ----------
+    q : array_like
+        quantile
+
+    Returns
+    -------
+    d : 1D numpy array of floats
+        Probability density function evaluated at `q`.
+        I.e. probability density corresponding to the quantile q.
     &#34;&#34;&#34;
+
     x = np.asarray(x)
     if x.ndim == 0:
         x = x.reshape(1)
     self._validate_shape(x)
-    return np.exp(self.kde.score_samples(x.reshape(-1, 1)))   </code></pre>
+    return np.exp(self.kde.score_samples(x.reshape(-1, 1)))</code></pre>
 </details>
 </dd>
 <dt id="redistributor.KernelDensity.ppf"><code class="name flex">
-<span>def <span class="ident">ppf</span></span>(<span>self, q)</span>
+<span>def <span class="ident">ppf</span></span>(<span>self, p)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This method approximates the ppf based on linear interpolation
+<div class="desc"><p>Percent point function of the estimated distribution.
+This method approximates the ppf based on linear interpolation
 of the cdf on self.grid_density many points. There is no formula
 for precise computation of gaussian mixture ppf. Therefore, if
 we wanted a precise function, we would need to bisect the cdf.
 Bisecting is very slow in comparison to just computing the cdf
-on a grid and using the interpolant to approximate the ppf.</p></div>
+on a grid and using the interpolant to approximate the ppf.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>p</code></strong> :&ensp;<code>array_like</code></dt>
+<dd>lower tail probability</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>q</code></strong> :&ensp;<code>1D numpy array</code> of <code>floats</code></dt>
+<dd>Percent point function evaluated at <code>p</code>.
+I.e. quantile corresponding to the lower tail probability p.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def ppf(self, q):
+<pre><code class="python">def ppf(self, p):
     &#34;&#34;&#34;
+    Percent point function of the estimated distribution.
     This method approximates the ppf based on linear interpolation
     of the cdf on self.grid_density many points. There is no formula
     for precise computation of gaussian mixture ppf. Therefore, if
     we wanted a precise function, we would need to bisect the cdf.
     Bisecting is very slow in comparison to just computing the cdf
     on a grid and using the interpolant to approximate the ppf.
+
+    Parameters
+    ----------
+    p : array_like
+        lower tail probability
+
+    Returns
+    -------
+    q : 1D numpy array of floats
+        Percent point function evaluated at `p`.
+        I.e. quantile corresponding to the lower tail probability p.
     &#34;&#34;&#34;
-    q = np.asarray(q)
-    if (q &lt; 0).any() or (q &gt; 1).any():
-        raise ValueError(&#39;Value in q out of PPF support (0, 1).&#39;)
-    return self._ppf(q)</code></pre>
+    p = np.asarray(p)
+    if (p &lt; 0).any() or (p &gt; 1).any():
+        raise ValueError(&#39;Value in p out of PPF support (0, 1).&#39;)
+    return self._ppf(p)</code></pre>
 </details>
 </dd>
 <dt id="redistributor.KernelDensity.rvs"><code class="name flex">
@@ -1844,7 +1938,7 @@ on a grid and using the interpolant to approximate the ppf.</p></div>
 </dd>
 <dt id="redistributor.LearnedDistribution"><code class="flex name class">
 <span>class <span class="ident">LearnedDistribution</span></span>
-<span>(</span><span>x, a=None, b=None, bins=None, keep_x_unchanged=True, subsample_x=None, ravel_x=True, assume_sorted=False, fill_value='auto', bounds_error='warn', dupl_method='spread', seed=None, name='LearnedDistribution', **kwargs)</span>
+<span>(</span><span>x, a=None, b=None, bins=None, keep_x_unchanged=True, subsample_x=None, ravel_x=True, assume_sorted=False, fill_value='auto', bounds_error='warn', resolve_duplicates=('max', 'raise'), seed=None, name='LearnedDistribution', **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A continuous random variable obtained by estimating the empirical
@@ -1863,17 +1957,21 @@ were specified by the user.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>x</code></strong> :&ensp;<code>1D numpy array</code></dt>
-<dd>1D vector of which the distribution will be estimated.</dd>
+<dd>Values from which the distribution will be estimated.
+The size of the array should be rather large, in case
+you have too small sample, consider using KDE class instead.
+Large magnitude of the array values in combination with
+small amount of samples, e.g.</dd>
 <dt><strong><code>a</code></strong> :&ensp;<code>numeric</code> or <code>None</code></dt>
 <dd>Left boundary of the distribution support if known.
-If specified, must be smaller than x.min().</dd>
+If specified, must be smaller than <code>x.min()</code>.</dd>
 <dt><strong><code>b</code></strong> :&ensp;<code>numeric</code> or <code>None</code></dt>
 <dd>Right boundary of the distribution support if known.
-If specified, must be bigger than x.max().</dd>
+If specified, must be bigger than <code>x.max()</code>.</dd>
 <dt><strong><code>bins</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
 <dd>User specified value of bins. Min is 3, max is <code>x.size</code>.
 If None or 0, bins are set automatically. Upper bound
-is set to 1000 to prevent unnecessary computation.
+is set to 5000 to prevent unnecessary computation.
 Used to specify the density of the lattice. More bins
 means higher precision but also more computation.</dd>
 <dt><strong><code>keep_x_unchanged</code></strong> :&ensp;<code>bool</code>, default <code>True</code></dt>
@@ -1891,45 +1989,57 @@ not enough available memory.</p>
 with a defined integer step. Not doing <code>random.choice()</code> but rather
 simple <code>slice(None, None, subsample_x)</code> because it is faster and
 we assume the array is randomly ordered. Can lead to significant
-speedups.</dd>
+speedups. If you need different approach to subsampling, do it in
+advance, provide already subsampled <code>x</code> and set this to None.</dd>
 <dt><strong><code>ravel_x</code></strong> :&ensp;<code>bool</code>, default <code>True</code></dt>
 <dd>LearnedDistribution requires 1D arrays. So the <code>x</code> is by default
 flattened to 1D using <code>np.ravel()</code>.</dd>
 <dt><strong><code>assume_sorted</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
 <dd>If the user knows that <code>x</code> is sorted, setting this to True will
-save a most of time by ommiting partial sorting the array.
+save computation by ommiting partial sorting the array.
 Especially useful if the array <code>x</code> is big. E.g. 1GB of data
 takes approx. 10s to partial sort on 5000 positions.
 If <code>False</code> and <code>x</code> is almost sorted, it will still be faster than
 if <code>x</code> is randomly ordered.</dd>
-<dt><strong><code>fill_value</code></strong> :&ensp;<code>None, array-like, float, 2-tuple</code> or <code>'auto'</code>, default=<code>'auto'</code></dt>
-<dd>Specifies where to map the values out of the <code>cdf</code> support. See the
+<dt><strong><code>fill_value</code></strong> :&ensp;<code>None, float, 2-tuple, 'auto'</code>, default=<code>'auto'</code></dt>
+<dd>
+<p>Specifies where to map the values out of the <code>cdf</code> support. See the
 docstring of scipy.interpolate.interp1d to learn more about the
-valid options. Additionally, this class enables the user to use
+possible options. Additionally, this class enables the user to use
 the default <code>auto</code> option, which sets reasonable <code>fill_value</code>
-automatically.</dd>
+automatically.</p>
+<p>WARNING: Not all choices of <code>fill_value</code> that are possible are also
+valid. E.g. <code>fill_value</code> should not be manually set to value
+smaller than 0 or larger than one. Also, <code>fill_value</code> should
+not be set such that it would make the output function decreasing.
+This also rules out the usage of 'extrapolate' option. All of these
+choices would not lead to a meaningful output in terms of
+a Cumulative Distribution Function.</p>
+</dd>
 <dt><strong><code>bounds_error</code></strong> :&ensp;<code>bool</code> or <code>'warn'</code>, default <code>'warn'</code></dt>
-<dd>See the docstring of class interp1d_with_warning.</dd>
-<dt><strong><code>dupl_method</code></strong> :&ensp;<code>str, one</code> of <code>{'keep', 'spread', 'cluster', 'noise'}</code></dt>
-<dd>default 'spread'
-Method of solving duplicate lattice values. Read more in
-docstring of <code><a title="redistributor.make_unique" href="#redistributor.make_unique">make_unique()</a></code>.</dd>
+<dd>If True, raises an error when values out of <code>cdf</code> support are
+encountered. If False or 'warn', the invalid values are mapped to
+<code>fill_value</code>. For more details see the docstring of class
+<code><a title="redistributor.interp1d_with_warning" href="#redistributor.interp1d_with_warning">interp1d_with_warning</a></code>.</dd>
+<dt><strong><code>resolve_duplicates</code></strong> :&ensp;<code>2-tuple (</code>dist<code>, </code>mode<code>)</code> or <code>None,</code></dt>
+<dd>
+<p>default ('max', 'raise')
+If not None, makes a call to <code><a title="redistributor.make_unique" href="#redistributor.make_unique">make_unique()</a></code> with specified <code>dist</code>
+and <code>mode</code> to make sure all <code>lattice_values</code> are unique. Read more
+in the docstring of <code><a title="redistributor.make_unique" href="#redistributor.make_unique">make_unique()</a></code> function.</p>
+<p>WARNING: If None, the array is kept with duplicates which means the
+<code>p != cdf(ppf(p))</code>. In case there is mulitple duplicates of <code>xmin</code>
+or <code>xmax</code> values, <code>cdf(xmin)</code> will fail to map to Δ and <code>cdf(xmax)</code>
+will fail to map to 1 - Δ as it should.</p>
+</dd>
 <dt><strong><code>name</code></strong> :&ensp;<code>str</code>, default <code>'LearnedDistribution'</code></dt>
-<dd>The name of the instance.</dd>
+<dd>Name of the instance. Useful for locating source of warnings, etc.</dd>
 <dt><strong><code>seed</code></strong> :&ensp;<code>{None, int,</code>numpy.random.Generator<code>,</code></dt>
 <dd><code>numpy.random.RandomState</code>}, default None
 See the docstring of scipy.stats.rv_continuous.
-Used in <code>_prevent_same()</code> and <code>rvs()</code>.</dd>
+Used in <code><a title="redistributor.make_unique" href="#redistributor.make_unique">make_unique()</a></code> and <code>rvs()</code>.</dd>
 </dl>
-<p>kwargs : all other keyword arguments accepted by rv_continous.</p>
-<h2 id="methods-todo-finish-this-documentation">Methods - TODO finish this documentation</h2>
-<p>cdf
-ppf
-pdf
-rvs
-entropy
-&hellip; fill in the rest which is implemented
-&hellip; handle the rest which does not make sense</p></div>
+<p>kwargs : all other keyword arguments accepted by rv_continous.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1959,20 +2069,24 @@ entropy
         ----------
 
         x : 1D numpy array
-            1D vector of which the distribution will be estimated.
+            Values from which the distribution will be estimated.
+            The size of the array should be rather large, in case
+            you have too small sample, consider using KDE class instead.
+            Large magnitude of the array values in combination with
+            small amount of samples, e.g.
 
         a : numeric or None
             Left boundary of the distribution support if known.
-            If specified, must be smaller than x.min().
+            If specified, must be smaller than `x.min()`.
 
         b : numeric or None
             Right boundary of the distribution support if known.
-            If specified, must be bigger than x.max().
+            If specified, must be bigger than `x.max()`.
 
         bins : int or None
             User specified value of bins. Min is 3, max is `x.size`.
             If None or 0, bins are set automatically. Upper bound
-            is set to 1000 to prevent unnecessary computation.
+            is set to 5000 to prevent unnecessary computation.
             Used to specify the density of the lattice. More bins
             means higher precision but also more computation.
 
@@ -1991,7 +2105,8 @@ entropy
             with a defined integer step. Not doing `random.choice()` but rather
             simple `slice(None, None, subsample_x)` because it is faster and
             we assume the array is randomly ordered. Can lead to significant
-            speedups.
+            speedups. If you need different approach to subsampling, do it in
+            advance, provide already subsampled `x` and set this to None.
 
         ravel_x : bool, default True
             LearnedDistribution requires 1D arrays. So the `x` is by default
@@ -1999,54 +2114,61 @@ entropy
 
         assume_sorted : bool, default False
             If the user knows that `x` is sorted, setting this to True will
-            save a most of time by ommiting partial sorting the array.
+            save computation by ommiting partial sorting the array.
             Especially useful if the array `x` is big. E.g. 1GB of data
             takes approx. 10s to partial sort on 5000 positions.
             If `False` and `x` is almost sorted, it will still be faster than
             if `x` is randomly ordered.
 
-        fill_value : None, array-like, float, 2-tuple or &#39;auto&#39;, default=&#39;auto&#39;
+        fill_value : None, float, 2-tuple, &#39;auto&#39;, default=&#39;auto&#39;
             Specifies where to map the values out of the `cdf` support. See the
             docstring of scipy.interpolate.interp1d to learn more about the
-            valid options. Additionally, this class enables the user to use
+            possible options. Additionally, this class enables the user to use
             the default `auto` option, which sets reasonable `fill_value`
             automatically.
 
-        bounds_error : bool or &#39;warn&#39;, default &#39;warn&#39;
-            See the docstring of class interp1d_with_warning.
+            WARNING: Not all choices of `fill_value` that are possible are also
+            valid. E.g. `fill_value` should not be manually set to value
+            smaller than 0 or larger than one. Also, `fill_value` should
+            not be set such that it would make the output function decreasing.
+            This also rules out the usage of &#39;extrapolate&#39; option. All of these
+            choices would not lead to a meaningful output in terms of
+            a Cumulative Distribution Function.
 
-        dupl_method : str, one of {&#39;keep&#39;, &#39;spread&#39;, &#39;cluster&#39;, &#39;noise&#39;}
-                      default &#39;spread&#39;
-            Method of solving duplicate lattice values. Read more in
-            docstring of `make_unique()`.
+        bounds_error : bool or &#39;warn&#39;, default &#39;warn&#39;
+            If True, raises an error when values out of `cdf` support are
+            encountered. If False or &#39;warn&#39;, the invalid values are mapped to
+            `fill_value`. For more details see the docstring of class
+            `interp1d_with_warning`.
+
+        resolve_duplicates : 2-tuple (`dist`, `mode`) or None,
+                             default (&#39;max&#39;, &#39;raise&#39;)
+            If not None, makes a call to `make_unique` with specified `dist`
+            and `mode` to make sure all `lattice_values` are unique. Read more
+            in the docstring of `make_unique` function.
+
+            WARNING: If None, the array is kept with duplicates which means the
+            `p != cdf(ppf(p))`. In case there is mulitple duplicates of `xmin`
+            or `xmax` values, `cdf(xmin)` will fail to map to Δ and `cdf(xmax)`
+            will fail to map to 1 - Δ as it should.
 
         name : str, default &#39;LearnedDistribution&#39;
-            The name of the instance.
+            Name of the instance. Useful for locating source of warnings, etc.
 
         seed : {None, int, `numpy.random.Generator`,
-            `numpy.random.RandomState`}, default None
+                `numpy.random.RandomState`}, default None
             See the docstring of scipy.stats.rv_continuous.
-            Used in `_prevent_same()` and `rvs()`.
+            Used in `make_unique()` and `rvs()`.
 
         kwargs : all other keyword arguments accepted by rv_continous.
-
-
-        Methods - TODO finish this documentation
-        -------
-
-        cdf
-        ppf
-        pdf
-        rvs
-        entropy
-        ... fill in the rest which is implemented
-        ... handle the rest which does not make sense
         &#34;&#34;&#34;
 
     def __init__(self, x, a=None, b=None, bins=None, keep_x_unchanged=True,
                  subsample_x=None, ravel_x=True, assume_sorted=False,
-                 fill_value=&#39;auto&#39;, bounds_error=&#39;warn&#39;, dupl_method=&#39;spread&#39;,
-                 seed=None, name=&#39;LearnedDistribution&#39;, **kwargs):
+                 fill_value=&#39;auto&#39;, bounds_error=&#39;warn&#39;,
+                 resolve_duplicates=(&#39;max&#39;, &#39;raise&#39;),
+                 seed=None, name=&#39;LearnedDistribution&#39;,
+                 **kwargs):
 
         super().__init__(name=name, seed=seed, **kwargs)
 
@@ -2075,9 +2197,11 @@ entropy
         # Setting lattice density
         self.bins = self._infer_bins(x.size, bins)
 
+        # Argument for treating duplicates
+        self.resolve_duplicates = resolve_duplicates
+
         # Interpolating to get the empirical distribution
         self.assume_sorted = assume_sorted
-        self.dupl_method = dupl_method
         lattice, vals = self._get_lattice_and_vals(x, keep_x_unchanged)
         self._cdf = self._get_cdf(lattice, vals)
         self._ppf = self._get_ppf(lattice, vals)
@@ -2085,27 +2209,43 @@ entropy
 
     def _get_support(self, *args):
         &#34;&#34;&#34;
-        Support of LearnedDistribution does not depend on any scipy arguments,
-        we keep args only to keep the signature unchanged from super.
+        Support of LearnedDistribution `cdf` does not depend on any scipy
+        argument, we keep args only to keep the signature unchanged from super.
 
-        The support depends only on whether `a` and/or `b` were specified
-        explicitely or as Nones.
+        In this case, the support of `cdf` depends only on whether `a` and/or
+        `b` were specified explicitely or as None values. Here, we return the
+        &#34;valid&#34; support based on data. The &#34;valid&#34; support might be shrunk if
+        either `a` or `b` is set to None. Only the points from the &#34;valid&#34;
+        support actually map to unique values. So, if the &#34;valid&#34; support is
+        not `[a, b]` but e.g. `[xmin, b]`, all the points from the interva
+        `[a, xmin]` will map to the same value.
 
-        `self.a` and/or `self.b` are kept stored as Nones to keep the
-        information about the object config for future reference of the user.
+        In case the boundaries were not set, `self.a` and/or `self.b` are kept
+        stored as Nones to keep the information about the object config for
+        future reference.
 
         Returns
         -------
         a, b : numeric (float, or int)
-            end-points of the distribution&#39;s support.
+            End-points of the valid `cdf` support.
         &#34;&#34;&#34;
         return self._cdf.x[0], self._cdf.x[-1]
 
     def _get_support_ppf(self, *args):
         &#34;&#34;&#34;
-        The support of `ppf` in scipy is always `[0,1]` so this method does not
-        exist in `rv_continuous`. In our case, the support might be shrinked if
-        any of the a, b is set to None.
+        The support of `ppf` in scipy is always `[0, 1]` so this method does
+        not exist in `rv_continuous`. Here, we return the &#34;valid&#34; support based
+        on data. The &#34;valid&#34; support might be shrunk if either `a` or `b` is
+        set to None. However, all the values from `[0, 1]` are actually
+        supported. Although, only the points from the &#34;valid&#34; support actually
+        map to unique values. So, if the &#34;valid&#34; support is not `[0, 1]` but
+        e.g. `[Δ, 1]`, all the points from the interval `[0, Δ]` will map to
+        the same value.
+
+        Returns
+        -------
+        a, b : numeric (float, or int)
+            End-points of the valid `ppf` support.
         &#34;&#34;&#34;
         return self._ppf.x[0], self._ppf.x[-1]
 
@@ -2185,61 +2325,67 @@ entropy
 
         lattice, 1D array of equidistant values
             Support of ppf or range of cdf. The first value of the array will
-            be either 0 or epsilon and the last value will be either 1 or
-            1 - epsilon depending if a or b are specified or None. Size or the
-            array will range from bins to bins + 2.
+            be either `0` or `Δ` and the last value will be either `1` or
+            `1 - Δ` depending if `a` or `b` are specified or None. Size of the
+            array will range from `bins` to `bins + 2`. `Δ = 1 / (bins + 1)`.
 
         lattice_vals, 1D array
             Range of ppf or support of cdf. The first value of the array will
-            be either xmin or a and the last value will be either xmax or b
+            be either `xmin` or a and the last value will be either `xmax` or b
             depending if a or b are specified or None. Size of the array will
             be the same as of `lattice`.
         &#34;&#34;&#34;
 
-        # Do we need expansion by a or b from Left or Right side or both?
-        L, R = self.a is not None, self.b is not None
-
-        # Indices at which we need x to be sorted considering L and R
+        # Indices at which we need x to be sorted
         indices = np.linspace(
-            0, x.size + L + R - 1, self.bins).round().astype(int)
-        indices = indices[L:-1 if R else None] - L
+            0, x.size - 1, self.bins).round().astype(int)
 
         if not self.assume_sorted:
-            # Reorder values of x on indices as if the array was sorted
-            if keep_x_unchanged:
-                # Does not change x but uses twice the memory
-                x = np.partition(x, indices)
-            else:
-                # Does not use additional memory but alters the order of data
-                x.partition(indices)
+            # If bins is reasonably small in comparison to x.size it
+            # pays off to do partial introselect sort instead of full sort
+            use_partial = (self.bins / x.size) &lt;= 0.25
+            if keep_x_unchanged:  # Does not change x but uses twice the memory
+                x = np.partition(x, indices) if use_partial else np.sort(x)
+            else:  # Doesn&#39;t use additional memory but alters the order of data
+                x.partition(indices) if use_partial else x.sort()
+
+        # Expand the cdf suport by a and/or b from Left and/or Right side?
+        L, R = self.a is not None, self.b is not None
+
+        # Get the values to build the lattice
+        vals_at_indices = x[indices]
+        if self.resolve_duplicates is not None:
+            make_unique(vals_at_indices, *self.resolve_duplicates,
+                        assume_sorted=True, inplace=True,
+                        random_state=self.random_state)
 
         # Get the _ppf.y (or _cdf.x) values
-        eps = 1 / (x.size + 1)  # Shrink the lattice with eps to exclude 0 or 1
-        lattice_vals = np.hstack([[self.a] * L, x[indices], [self.b] * R])
+        lattice_vals = np.hstack([[self.a] * L, vals_at_indices, [self.b] * R])
 
         # Get the _ppf.x (or _cdf.y) values
+        delta = 1 / (self.bins + 1)  # Shrink using Δ to exclude 0 or 1
         lattice = np.linspace(
-            eps * (not L), 1 - eps * (not R), lattice_vals.size)
+            delta * (not L), 1 - delta * (not R), lattice_vals.size)
 
         if not all(np.isfinite(lattice_vals)):
             raise ValueError(&#39;Values of x on the lattice must be finite.&#39;)
 
-        # If necessary, make duplicate values unique and warn the user.
-        lattice_vals = make_unique(
-            lattice_vals, self.random_state, mode=self.dupl_method)
         return lattice, lattice_vals
 
     def _get_cdf(self, lattice, lattice_vals):
         &#34;&#34;&#34;
         Interpolates the lattice on lattice_vals to get the `cdf`.
+        If the function is evaluated at a point outside of the support,
+        it is mapped to fill_value.
 
-        Table of `fill_value` if `self.fill_value == &#39;auto&#39;` (n = x.size):
+        Table of `fill_value` if `self.fill_value == &#39;auto&#39;`
+        Δ = 1 - (bins + 1)
         ------------------------------------------------------------------
         a     | b     | cdf support | truncated to | fill_value
         ------------------------------------------------------------------
-        None  | None  | xmin, xmax  | xmin, xmax   | 1/(n-1), (n-2)/(n-1)
-        None  | b     | xmin, b     | xmin, None   | 1/(n-1), None
-        a     | None  | a,    xmax  | None, xmax   | None, (n-2)/(n-1)
+        None  | None  | xmin, xmax  | xmin, xmax   | Δ, 1-Δ
+        None  | b     | xmin, b     | xmin, None   | Δ, None
+        a     | None  | a,    xmax  | None, xmax   | None, 1-Δ
         a     | b     | a,    b     | None, None   | None, None
         &#34;&#34;&#34;
 
@@ -2252,7 +2398,7 @@ entropy
 
         return interp1d_with_warning(
             lattice_vals, lattice, kind=&#39;linear&#39;, assume_sorted=True,
-            bounds_error=self.bounds_error, fill_value=fill_value, 
+            bounds_error=self.bounds_error, fill_value=fill_value,
             name=f&#39;{self.name} cdf interpolant&#39;)
 
     def _get_ppf(self, lattice, lattice_vals):
@@ -2261,29 +2407,62 @@ entropy
         `fill_values` is set to the `xmin` and `xmax` to avoid problems
         when generating random sample with `rvs()`. `bounds_error` is
         set to `False` because user does not need a warning about this
-        behaviour and values `q &lt; 0` or `q &gt; 1` should not ever occur at all.
+        behaviour and values `p &lt; 0` or `p &gt; 1` should not ever occur at all.
         &#34;&#34;&#34;
         fill_value = (lattice_vals[0], lattice_vals[-1])
         return interp1d_with_warning(
             lattice, lattice_vals, kind=&#39;linear&#39;, assume_sorted=True,
-            bounds_error=False, fill_value=fill_value, 
+            bounds_error=False, fill_value=fill_value,
             name=f&#39;{self.name} ppf interpolant&#39;)
 
-    def cdf(self, k):
-        # We do not need the default argument checking from scipy
-        # because we handle the invalid values differently using
-        # the class `interp1d_withwarning`. Therefore:
-        k = np.asarray(k)
-        return self._cdf(k)
+    def cdf(self, q):
+        &#34;&#34;&#34;
+        Interpolates the lattice on lattice_vals to get the
+        piecewise linear approximation to the emprical cumulative
+        distribution function of the learned distribution.
 
-    def ppf(self, q):
+        Parameters
+        ----------
+        q : array_like
+            quantile
+
+        Returns
+        -------
+        p : 1D numpy array of floats
+            Cumulative distribution function evaluated at `q`.
+            I.e. lower tail probability corresponding to the quantile q.
+        &#34;&#34;&#34;
         # We do not need the default argument checking from scipy
         # because we handle the invalid values differently using
         # the class `interp1d_withwarning`. Therefore:
         q = np.asarray(q)
-        if np.any(q &lt; 0) or np.any(q &gt; 1):
+        return self._cdf(q)
+
+    def ppf(self, p):
+        &#34;&#34;&#34;
+        Interpolates the lattice_vals on lattice to get the
+        piecewise linear approximation to the inverse of the emprical
+        cumulative distribution function of the learned distribution.
+        I.e. a Percent point function of the learned distribution.
+
+        Parameters
+        ----------
+        p : array_like
+            lower tail probability
+
+        Returns
+        -------
+        q : 1D numpy array of floats
+            Percent point function evaluated at `p`.
+            I.e. quantile corresponding to the lower tail probability p.
+        &#34;&#34;&#34;
+        # We do not need the default argument checking from scipy
+        # because we handle the invalid values differently using
+        # the class `interp1d_withwarning`. Therefore:
+        p = np.asarray(p)
+        if np.any(p &lt; 0) or np.any(p &gt; 1):
             raise ValueError(&#39;Some values out of ppf support [0, 1].&#39;)
-        return self._ppf(q)
+        return self._ppf(p)
 
     def _get_pdf(self):
         &#34;&#34;&#34;
@@ -2293,7 +2472,7 @@ entropy
         c = self.cdf(g)  # Evaluated cdf
         dx = 1 / (g[1] - g[0])
         dif = np.round(np.ediff1d(c, to_begin=c[1] - c[0]) * dx, decimals=10)
-        return interp1d_with_warning(g, dif, kind=&#39;linear&#39;, assume_sorted=True, 
+        return interp1d_with_warning(g, dif, kind=&#39;linear&#39;, assume_sorted=True,
                                      name=f&#39;{self.name} pdf interpolant&#39;)
 
     def _entropy(self, *args):
@@ -2323,73 +2502,99 @@ entropy
 <h3>Methods</h3>
 <dl>
 <dt id="redistributor.LearnedDistribution.cdf"><code class="name flex">
-<span>def <span class="ident">cdf</span></span>(<span>self, k)</span>
+<span>def <span class="ident">cdf</span></span>(<span>self, q)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Cumulative distribution function of the given RV.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>array_like</code></dt>
-<dd>quantiles</dd>
-<dt>arg1, arg2, arg3,&hellip; : array_like</dt>
-<dt>The shape parameter(s) for the distribution (see docstring of the</dt>
-<dt>instance object for more information)</dt>
-<dt><strong><code>loc</code></strong> :&ensp;<code>array_like</code>, optional</dt>
-<dd>location parameter (default=0)</dd>
-<dt><strong><code>scale</code></strong> :&ensp;<code>array_like</code>, optional</dt>
-<dd>scale parameter (default=1)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>cdf</code></strong> :&ensp;<code>ndarray</code></dt>
-<dd>Cumulative distribution function evaluated at <code>x</code></dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def cdf(self, k):
-    # We do not need the default argument checking from scipy
-    # because we handle the invalid values differently using
-    # the class `interp1d_withwarning`. Therefore:
-    k = np.asarray(k)
-    return self._cdf(k)</code></pre>
-</details>
-</dd>
-<dt id="redistributor.LearnedDistribution.ppf"><code class="name flex">
-<span>def <span class="ident">ppf</span></span>(<span>self, q)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Percent point function (inverse of <code>cdf</code>) at q of the given RV.</p>
+<div class="desc"><p>Interpolates the lattice on lattice_vals to get the
+piecewise linear approximation to the emprical cumulative
+distribution function of the learned distribution.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>q</code></strong> :&ensp;<code>array_like</code></dt>
-<dd>lower tail probability</dd>
-<dt>arg1, arg2, arg3,&hellip; : array_like</dt>
-<dt>The shape parameter(s) for the distribution (see docstring of the</dt>
-<dt>instance object for more information)</dt>
-<dt><strong><code>loc</code></strong> :&ensp;<code>array_like</code>, optional</dt>
-<dd>location parameter (default=0)</dd>
-<dt><strong><code>scale</code></strong> :&ensp;<code>array_like</code>, optional</dt>
-<dd>scale parameter (default=1)</dd>
+<dd>quantile</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>array_like</code></dt>
-<dd>quantile corresponding to the lower tail probability q.</dd>
+<dt><strong><code>p</code></strong> :&ensp;<code>1D numpy array</code> of <code>floats</code></dt>
+<dd>Cumulative distribution function evaluated at <code>q</code>.
+I.e. lower tail probability corresponding to the quantile q.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def ppf(self, q):
+<pre><code class="python">def cdf(self, q):
+    &#34;&#34;&#34;
+    Interpolates the lattice on lattice_vals to get the
+    piecewise linear approximation to the emprical cumulative
+    distribution function of the learned distribution.
+
+    Parameters
+    ----------
+    q : array_like
+        quantile
+
+    Returns
+    -------
+    p : 1D numpy array of floats
+        Cumulative distribution function evaluated at `q`.
+        I.e. lower tail probability corresponding to the quantile q.
+    &#34;&#34;&#34;
     # We do not need the default argument checking from scipy
     # because we handle the invalid values differently using
     # the class `interp1d_withwarning`. Therefore:
     q = np.asarray(q)
-    if np.any(q &lt; 0) or np.any(q &gt; 1):
+    return self._cdf(q)</code></pre>
+</details>
+</dd>
+<dt id="redistributor.LearnedDistribution.ppf"><code class="name flex">
+<span>def <span class="ident">ppf</span></span>(<span>self, p)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Interpolates the lattice_vals on lattice to get the
+piecewise linear approximation to the inverse of the emprical
+cumulative distribution function of the learned distribution.
+I.e. a Percent point function of the learned distribution.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>p</code></strong> :&ensp;<code>array_like</code></dt>
+<dd>lower tail probability</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>q</code></strong> :&ensp;<code>1D numpy array</code> of <code>floats</code></dt>
+<dd>Percent point function evaluated at <code>p</code>.
+I.e. quantile corresponding to the lower tail probability p.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ppf(self, p):
+    &#34;&#34;&#34;
+    Interpolates the lattice_vals on lattice to get the
+    piecewise linear approximation to the inverse of the emprical
+    cumulative distribution function of the learned distribution.
+    I.e. a Percent point function of the learned distribution.
+
+    Parameters
+    ----------
+    p : array_like
+        lower tail probability
+
+    Returns
+    -------
+    q : 1D numpy array of floats
+        Percent point function evaluated at `p`.
+        I.e. quantile corresponding to the lower tail probability p.
+    &#34;&#34;&#34;
+    # We do not need the default argument checking from scipy
+    # because we handle the invalid values differently using
+    # the class `interp1d_withwarning`. Therefore:
+    p = np.asarray(p)
+    if np.any(p &lt; 0) or np.any(p &gt; 1):
         raise ValueError(&#39;Some values out of ppf support [0, 1].&#39;)
-    return self._ppf(q)</code></pre>
+    return self._ppf(p)</code></pre>
 </details>
 </dd>
 <dt id="redistributor.LearnedDistribution.rvs"><code class="name flex">
@@ -2609,8 +2814,7 @@ transform and inverse transform functions.</p>
 the user to specify <code>bounds_error = 'warn'</code> which overrides the
 behaviour of <code>_check_bunds</code> to warn instead of raising an error.</p>
 <h2 id="parameters">Parameters</h2>
-<p>Accepts all the args and kwargs as scipy.interpolate.interp1d.
-Additionally, </p>
+<p>Accepts all the args and kwargs as scipy.interpolate.interp1d.</p>
 <p>Initialize a 1-D linear interpolation class.</p></div>
 <details class="source">
 <summary>
@@ -2625,7 +2829,6 @@ Additionally, </p>
     Parameters
     ----------
     Accepts all the args and kwargs as scipy.interpolate.interp1d.
-    Additionally, 
     &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
@@ -2655,7 +2858,8 @@ Additionally, </p>
 
         if below_bounds.any():
             if self.bounds_error:
-                m = msg.format(self.name, below_bounds.sum(), below_bounds.size, &#39;below&#39;)
+                m = msg.format(self.name, below_bounds.sum(),
+                               below_bounds.size, &#39;below&#39;)
                 if self.warn:
                     m += (&#39; Mapping the invalid values to value: &#39;
                           f&#39;{self._fill_value_below}.&#39;)
@@ -2665,7 +2869,8 @@ Additionally, </p>
 
         if above_bounds.any():
             if self.bounds_error:
-                m = msg.format(self.name, above_bounds.sum(), above_bounds.size, &#39;above&#39;)
+                m = msg.format(self.name, above_bounds.sum(),
+                               above_bounds.size, &#39;above&#39;)
                 if self.warn:
                     m += (&#39; Mapping the invalid values to value: &#39;
                           f&#39;{self._fill_value_above}.&#39;)

@@ -52,8 +52,6 @@ Extra dependencies for running the tests, compiling the documentation, or runnin
 
 The full version-locked list of dependencies and subdependencies is frozen in `requirements.txt`. Installing with `pip install -r requirements.txt` in a virtual environment should always lead to a fully functional project.
 
-
-
 [comment]: <> (written in katex https://katex.org/docs/supported.html)
 
 ## Mathematical description
