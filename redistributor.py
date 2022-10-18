@@ -684,7 +684,7 @@ class KernelDensity():
         KDE requires 1D arrays. So the `x` is by default
         flattened to 1D using `np.ravel()`.
 
-    grid_density : int
+    grid_density : int, default 5e3
         User specified number of grid points on which the CDF is computed
         precisely in order to build the interpolants for fast CDF and PPF.
         The same grid is used for CDF fast and PPF. The user specified
@@ -711,7 +711,7 @@ class KernelDensity():
     rvs : Random sample generator
     """
 
-    def __init__(self, x, ravel_x=True, grid_density=int(1e4),
+    def __init__(self, x, ravel_x=True, grid_density=int(5e3),
                  cdf_method='fast', name='KDE', **kwargs):
 
         self.name = name
