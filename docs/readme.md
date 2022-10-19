@@ -29,5 +29,5 @@ pdoc . --html --output-dir docs --force --config latex_math=True --template-dir 
 
 ### :notebook_with_decorative_cover: PDF output
 ```
-pdoc . --pdf | pandoc --metadata=title:"Redistributor Documentation" --from=markdown+abbreviations+tex_math_single_backslash --pdf-engine=xelatex --variable=mainfont:"DejaVu Sans" --toc --toc-depth=4 --output=docs/redistributor.pdf
+pdoc . --pdf | pandoc --metadata=title:"Redistributor Documentation" --from=markdown+abbreviations+tex_math_dollars --pdf-engine=xelatex --variable=mainfont:"DejaVu Sans" --toc --toc-depth=4 --output=docs/redistributor.pdf
 ```
