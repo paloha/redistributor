@@ -1,9 +1,7 @@
 
-<center>
-<img src="https://gitlab.com/paloha/redistributor/uploads/e1bbea08834112646af45e6917324379/avatar.png" alt="match_colors" width="25%">
+<img src="https://gitlab.com/paloha/redistributor/uploads/e1bbea08834112646af45e6917324379/avatar.png" alt="match_colors" width="20%">
 
 # Redistributor
-</center>
 
 **Redistributor** is a Python package which forces a collection of scalar samples to follow a desired distribution. When given independent and identically distributed samples of some random variable $S$ and the continuous cumulative distribution function of some desired target $T$, it provably produces a consistent estimator of the transformation $R$ which satisfies $R(S)=T$ in distribution. As the distribution of $S$ or $T$ may be unknown, we also include algorithms for efficiently estimating these distributions from samples. This allows for various interesting use cases in image processing, where Redistributor serves as a remarkably simple and easy-to-use tool that is capable of producing visually appealing results. The package is implemented in Python and is optimized to efficiently handle large data sets, making it also suitable as a preprocessing step in machine learning.
 <br>
