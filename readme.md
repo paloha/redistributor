@@ -40,7 +40,7 @@ Documentation is available in `docs` folder.
 ## News & Changelog
 
 * :hammer: Package is still under development
-* 2022.10 - Preprint published on ArXiv :tada:
+* 2022.10 - [Preprint](https://arxiv.org/abs/2210.14219) published on ArXiv :tada:
 * 2022.09 - Redistributor v1.0 (complete rewrite)
 * 2021.10 - Redistributor v0.2 (generalization to arbitrary source & target)
 * 2018.08 - Introducing Redistributor (generalization to arbitrary target)
@@ -50,11 +50,11 @@ Documentation is available in `docs` folder.
 
 If you use Redistributor in your research, please cite the following paper:
 ```
-@article{redistributor2022,
+@article{harar2022redistributor,
   title={Redistributor: Transforming Empirical Data Distributions},
   author={Harar, P. and Elbrächter, D. and Dörfler, M. and Johnson, K.},
   eprinttype={ArXiv},
-  eprint={...}
+  eprint={2210.14219}
 }
 ```
 

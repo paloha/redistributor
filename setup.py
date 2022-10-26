@@ -15,7 +15,7 @@ setup(
     project_urls={
         'Source': 'https://gitlab.com/paloha/redistributor',
         'Documentation': 'https://gitlab.com/paloha/redistributor/-/raw/master/docs/redistributor.pdf?inline=false',
-        'Publication DOI': 'todo add doi',
+        'Publication': 'http://arxiv.org/abs/2210.14219',
         'Issue tracker': 'https://gitlab.com/paloha/redistributor/issues',
     },
     python_requires='>3.6',
