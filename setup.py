@@ -19,7 +19,7 @@ setup(
         'Issue tracker': 'https://gitlab.com/paloha/redistributor/issues',
     },
     python_requires='>3.6',
-    platforms=['Ubuntu'],
+    platforms=['any'],
     install_requires=['numpy>=1.14.5', 'scipy>=1.1.0',
                       'scikit_learn>=0.19.1', 'psutil>=5.4.6'],
     extras_require={
