@@ -1,97 +1,65 @@
-:warning: | Still under development
-:---: | :---
 
-This repository introduces three main classes, namely **Redistributor**, **LearnedDistribution**, and **KernelDensity**.
+<center>
+<img src="https://gitlab.com/paloha/redistributor/uploads/e1bbea08834112646af45e6917324379/avatar.png" alt="match_colors" width="25%">
 
-**Redistributor** is a tool for automatic transformation of empirical data distributions. It is implemented as a **Scikit-learn transformer**. It allows users to transform their data from arbitrary distribution into another arbitrary distribution. The source and target distributions, if known beforehand, can be specified exactly (e.g. as a [Continuous Scipy distribution](https://docs.scipy.org/doc/scipy/reference/tutorial/stats/continuous.html#continuous-distributions-in-scipy-stats) or any other class which has `cdf` and `pdf` methods implemented), or can be inferred from data using `LearnedDistribution` or `KernelDensity`classes. Transformation is **piece-wise-linear, monotonic, invertible**, and can be **saved for later use** on different data assuming the same source distribution.
+# Redistributor
+</center>
 
-**LearnedDistribution** is a subclass of [Scipy.stats.rv_continous](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy-stats-rv-continuous) class. It is a continuous random variable obtained by estimating the empirical distribution of a user provided array of numeric data `x`. It can be used to sample new random points from the estimated distribution.
+**Redistributor** is a Python package which forces a collection of scalar samples to follow a desired distribution. When given independent and identically distributed samples of some random variable $S$ and the continuous cumulative distribution function of some desired target $T$, it provably produces a consistent estimator of the transformation $R$ which satisfies $R(S)=T$ in distribution. As the distribution of $S$ or $T$ may be unknown, we also include algorithms for efficiently estimating these distributions from samples. This allows for various interesting use cases in image processing, where Redistributor serves as a remarkably simple and easy-to-use tool that is capable of producing visually appealing results. The package is implemented in Python and is optimized to efficiently handle large data sets, making it also suitable as a preprocessing step in machine learning.
+<br>
 
-**KernelDensity** is a wrapper of [sklearn.neighbors.KernelDensity](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KernelDensity.html) class. It only supports Gaussian kernel and is suitable for fitting distributions base on small number of data points. It implements `cdf` function based on the formula for Gaussian-mixture `cdf`. It also provides a sped-up version of the `cdf` which is its approximation (use `method='fast'`). It also implements `ppf` function, but since there is no explicit formula for the ppf of a Gaussian mixture, it is an approximation of the real `ppf`. As `LearnedDistribution`, also `KernelDensity` is a continuous random variable obtained by estimating the empirical distribution of a user provided array of numeric data `x`. It also can be used to sample new random points from the estimated distribution.
-
-
-<!-- The empirical distribution can be inferred from a 1D array of data. To redistribute multiple slices of your data use `Redistributor_multi` class which has a **low memory footprint** and utilizes **parallel computing** to apply multiple `Redistributor` objects. -->
+<img src="https://gitlab.com/paloha/redistributor/uploads/ce5305668697d3bdf6035c839aceb2c2/match_colors.jpg" alt="Example of matching colors" width="100%">
+<small><i><center>Matching colors of a reference image – one of the use cases of Redistributor</center></i></small>
 
 ## Installation
 
-:warning: | Not yet published on PyPi. Coming soon.
-:---: | :---
-
-The code is hosted in this [GitLab repository](https://gitlab.com/paloha/redistributor).
-To install the released version from Pypi use:
-
-```bash
+<!-- ```bash
 pip install redistributor
-```
-Or install the bleeding edge directly from git:
+``` -->
+Install the latest version directly from the [repository](https://gitlab.com/paloha/redistributor):
 ```bash
 pip install git+https://gitlab.com/paloha/redistributor
 ```
-For development, install the package in editable mode with extra dependencies for documentation and testing:
-```bash
-# Clone the repository
-git clone git@gitlab.com:paloha/redistributor.git
-cd redistributor
 
- # Use virtual environment [optional]
-python3 -m virtualenv .venv
-source .venv/bin/activate
+## Quick-start
 
-# Install with pip in editable mode
-pip install -e .[dev]
+```python
+from redistributor import Redistributor as R
+from redistributor import LearnedDistribution as L
+from scipy.stats import dgamma, norm
+
+S = dgamma(7).rvs(size=1000)  # Samples from source distribution
+target = norm(0, 1)  # In this example, target is set explicitly
+r = R(source=L(S), target=target)  # Estimate the transformation
+output = r.transform(S)  # Data now follows the target distribution
 ```
+More in `examples.ipynb`.
 
-## Compatibility
-...
+## Documentation
+Documentation is available in `docs` folder.
 
-## Dependencies
 
-Required packages for `Redistributor` are specified in the `install_requires` list in the `setup.py` file.
+## News & Changelog
 
-Extra dependencies for running the tests, compiling the documentation, or running the examples are specified in the `extras_require` dictionary in the same file.
-
-The full version-locked list of dependencies and subdependencies is frozen in `requirements.txt`. Installing with `pip install -r requirements.txt` in a virtual environment should always lead to a fully functional project.
-
-[comment]: <> (written in katex https://katex.org/docs/supported.html)
-
-## Mathematical description
-
-Assume we are given data $x\sim S$ distributed according to some source distribution $S$ on $\mathbb{R}$ and our goal is to find a transformation $R$ such that $R(x)\sim T$ for some target distribution $T$ on $\mathbb{R}$.
-
-One can mathematically show that a suitable $R\colon \mathbb{R} \to \mathbb{R}$ is given by
-$$
-R := F_{T}^{-1} \circ F_{S},
-$$
-where $F_S$ and $F_T$ are the cumulative distribution functions of $S$ and $T$, respectively.
-
-If $S$ and $T$ is unknown, one can use approximations $\tilde{F}_S$ and $\tilde{F}_T$ of the corresponding cumulative distribution functions given by interpolating (partially) sorted data
-
-$$
-(x_i)_{i=1}^N \ \text{with} \ x_i \sim S
-$$
-
-$$
-(y_i)_{i=1}^M \ \text{with} \ y_i \sim T.
-$$
-
-Defining
-$$
-\tilde{R} := \tilde{F}_{T}^{-1} \circ \tilde{F}_S,
-$$
-
-one can, under suitable conditions, show that
-$$
-\tilde{R} \xrightarrow[N,M\to \infty]{} R.
-$$
-
+* :hammer: Package is still under development
+* 2022.10 - Preprint published on ArXiv :tada:
+* 2022.09 - Redistributor v1.0 (complete rewrite)
+* 2021.10 - Redistributor v0.2 (generalization to arbitrary source & target)
+* 2018.08 - Introducing Redistributor (generalization to arbitrary target)
+* 2018.07 - Introducing Gaussifier package (now deprecated)
 
 ## How to cite
-...
+
+If you use Redistributor in your research, please cite the following paper:
+```
+@article{redistributor2022,
+  title={Redistributor: Transforming Empirical Data Distributions},
+  author={Harar, P. and Elbrächter, D. and Dörfler, M. and Johnson, K.},
+  eprinttype={ArXiv},
+  eprint={...}
+}
+```
 
 ## License
 This project is licensed under the terms of the MIT license.
 See `license.txt` for details.
-
-## Acknowledgement
-This work was supported by the *International Mobility of Researchers* (program call no.: [CZ.02.2.69/0.0/0.0/16027/0008371](https://opvvv.msmt.cz/vyzva/vyzva-c-02-16-027-mezinarodni-mobilita-vyzkumnych-pracovniku.htm)).
-![opvvv](https://gitlab.com/paloha/redistributor/uploads/19903a1b9e00015faa2b61234a99b911/opvvv.jpg)

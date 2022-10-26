@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
 <title>redistributor API documentation</title>
-<meta name="description" content=":warning: | Still under development
-:---: | :--- …" />
+<meta name="description" content="&lt;center&gt;
+&lt;img src=&#34;https://gitlab.com/paloha/redistributor/uploads/e1bbea08834112646af45e6917324379/avatar.png&#34; alt=&#34;match_colors&#34; width=&#34;25%&#34;&gt; …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -35,105 +35,55 @@ src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLor
 <h1 class="title">Module <code>redistributor</code></h1>
 </header>
 <section id="section-intro">
-<table>
-<thead>
-<tr>
-<th align="center">:warning:</th>
-<th align="left">Still under development</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>This repository introduces three main classes, namely <strong>Redistributor</strong>, <strong>LearnedDistribution</strong>, and <strong>KernelDensity</strong>.</p>
-<p><strong>Redistributor</strong> is a tool for automatic transformation of empirical data distributions. It is implemented as a <strong>Scikit-learn transformer</strong>. It allows users to transform their data from arbitrary distribution into another arbitrary distribution. The source and target distributions, if known beforehand, can be specified exactly (e.g. as a <a href="https://docs.scipy.org/doc/scipy/reference/tutorial/stats/continuous.html#continuous-distributions-in-scipy-stats">Continuous Scipy distribution</a> or any other class which has <code>cdf</code> and <code>pdf</code> methods implemented), or can be inferred from data using <code><a title="redistributor.LearnedDistribution" href="#redistributor.LearnedDistribution">LearnedDistribution</a></code> or <code><a title="redistributor.KernelDensity" href="#redistributor.KernelDensity">KernelDensity</a></code>classes. Transformation is <strong>piece-wise-linear, monotonic, invertible</strong>, and can be <strong>saved for later use</strong> on different data assuming the same source distribution.</p>
-<p><strong>LearnedDistribution</strong> is a subclass of <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy-stats-rv-continuous">Scipy.stats.rv_continous</a> class. It is a continuous random variable obtained by estimating the empirical distribution of a user provided array of numeric data <code>x</code>. It can be used to sample new random points from the estimated distribution.</p>
-<p><strong>KernelDensity</strong> is a wrapper of <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KernelDensity.html">sklearn.neighbors.KernelDensity</a> class. It only supports Gaussian kernel and is suitable for fitting distributions base on small number of data points. It implements <code>cdf</code> function based on the formula for Gaussian-mixture <code>cdf</code>. It also provides a sped-up version of the <code>cdf</code> which is its approximation (use <code>method='fast'</code>). It also implements <code>ppf</code> function, but since there is no explicit formula for the ppf of a Gaussian mixture, it is an approximation of the real <code>ppf</code>. As <code><a title="redistributor.LearnedDistribution" href="#redistributor.LearnedDistribution">LearnedDistribution</a></code>, also <code><a title="redistributor.KernelDensity" href="#redistributor.KernelDensity">KernelDensity</a></code> is a continuous random variable obtained by estimating the empirical distribution of a user provided array of numeric data <code>x</code>. It also can be used to sample new random points from the estimated distribution.</p>
-<!-- The empirical distribution can be inferred from a 1D array of data. To redistribute multiple slices of your data use <code>Redistributor\_multi</code> class which has a **low memory footprint** and utilizes **parallel computing** to apply multiple <code><a title="redistributor.Redistributor" href="#redistributor.Redistributor">Redistributor</a></code> objects. -->
+<p><center>
+<img src="https://gitlab.com/paloha/redistributor/uploads/e1bbea08834112646af45e6917324379/avatar.png" alt="match_colors" width="25%"></p>
+<h1 id="redistributor">Redistributor</h1>
+<p></center></p>
+<p><strong>Redistributor</strong> is a Python package which forces a collection of scalar samples to follow a desired distribution. When given independent and identically distributed samples of some random variable $S$ and the continuous cumulative distribution function of some desired target $T$, it provably produces a consistent estimator of the transformation $R$ which satisfies $R(S)=T$ in distribution. As the distribution of $S$ or $T$ may be unknown, we also include algorithms for efficiently estimating these distributions from samples. This allows for various interesting use cases in image processing, where Redistributor serves as a remarkably simple and easy-to-use tool that is capable of producing visually appealing results. The package is implemented in Python and is optimized to efficiently handle large data sets, making it also suitable as a preprocessing step in machine learning.
+<br></p>
+<p><img src="https://gitlab.com/paloha/redistributor/uploads/ce5305668697d3bdf6035c839aceb2c2/match_colors.jpg" alt="Example of matching colors" width="100%">
+<small><i><center>Matching colors of a reference image – one of the use cases of Redistributor</center></i></small></p>
 <h2 id="installation">Installation</h2>
-<table>
-<thead>
-<tr>
-<th align="center">:warning:</th>
-<th align="left">Not yet published on PyPi. Coming soon.</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>The code is hosted in this <a href="https://gitlab.com/paloha/redistributor">GitLab repository</a>.
-To install the released version from Pypi use:</p>
-<pre><code class="language-bash">pip install redistributor
-</code></pre>
-<p>Or install the bleeding edge directly from git:</p>
+<!-- ```bash
+pip install redistributor
+``` -->
+<p>Install the latest version directly from the <a href="https://gitlab.com/paloha/redistributor">repository</a>:</p>
 <pre><code class="language-bash">pip install git+https://gitlab.com/paloha/redistributor
 </code></pre>
-<p>For development, install the package in editable mode with extra dependencies for documentation and testing:</p>
-<pre><code class="language-bash"># Clone the repository
-git clone git@gitlab.com:paloha/redistributor.git
-cd redistributor
+<h2 id="quick-start">Quick-start</h2>
+<pre><code class="language-python">from redistributor import Redistributor as R
+from redistributor import LearnedDistribution as L
+from scipy.stats import dgamma, norm
 
- # Use virtual environment [optional]
-python3 -m virtualenv .venv
-source .venv/bin/activate
-
-# Install with pip in editable mode
-pip install -e .[dev]
+S = dgamma(7).rvs(size=1000)  # Samples from source distribution
+target = norm(0, 1)  # In this example, target is set explicitly
+r = R(source=L(S), target=target)  # Estimate the transformation
+output = r.transform(S)  # Data now follows the target distribution
 </code></pre>
-<h2 id="compatibility">Compatibility</h2>
-<p>&hellip;</p>
-<h2 id="dependencies">Dependencies</h2>
-<p>Required packages for <code><a title="redistributor.Redistributor" href="#redistributor.Redistributor">Redistributor</a></code> are specified in the <code>install_requires</code> list in the <code>setup.py</code> file.</p>
-<p>Extra dependencies for running the tests, compiling the documentation, or running the examples are specified in the <code>extras_require</code> dictionary in the same file.</p>
-<p>The full version-locked list of dependencies and subdependencies is frozen in <code>requirements.txt</code>. Installing with <code>pip install -r requirements.txt</code> in a virtual environment should always lead to a fully functional project.</p>
-<h2 id="mathematical-description">Mathematical description</h2>
-<p>Assume we are given data $x\sim S$ distributed according to some source distribution $S$ on $\mathbb{R}$ and our goal is to find a transformation $R$ such that $R(x)\sim T$ for some target distribution $T$ on $\mathbb{R}$.</p>
-<p>One can mathematically show that a suitable $R\colon \mathbb{R} \to \mathbb{R}$ is given by
-<span><span class="MathJax_Preview">
-R := F_{T}^{-1} \circ F_{S},
-</span><script type="math/tex; mode=display">
-R := F_{T}^{-1} \circ F_{S},
-</script></span>
-where $F_S$ and $F_T$ are the cumulative distribution functions of $S$ and $T$, respectively.</p>
-<p>If $S$ and $T$ is unknown, one can use approximations $\tilde{F}_S$ and $\tilde{F}_T$ of the corresponding cumulative distribution functions given by interpolating (partially) sorted data</p>
-<p><span><span class="MathJax_Preview">
-(x_i)_{i=1}^N \ \text{with} \ x_i \sim S
-</span><script type="math/tex; mode=display">
-(x_i)_{i=1}^N \ \text{with} \ x_i \sim S
-</script></span></p>
-<p><span><span class="MathJax_Preview">
-(y_i)_{i=1}^M \ \text{with} \ y_i \sim T.
-</span><script type="math/tex; mode=display">
-(y_i)_{i=1}^M \ \text{with} \ y_i \sim T.
-</script></span></p>
-<p>Defining
-<span><span class="MathJax_Preview">
-\tilde{R} := \tilde{F}_{T}^{-1} \circ \tilde{F}_S,
-</span><script type="math/tex; mode=display">
-\tilde{R} := \tilde{F}_{T}^{-1} \circ \tilde{F}_S,
-</script></span></p>
-<p>one can, under suitable conditions, show that
-<span><span class="MathJax_Preview">
-\tilde{R} \xrightarrow[N,M\to \infty]{} R.
-</span><script type="math/tex; mode=display">
-\tilde{R} \xrightarrow[N,M\to \infty]{} R.
-</script></span></p>
+<p>More in <code>examples.ipynb</code>.</p>
+<h2 id="documentation">Documentation</h2>
+<p>Documentation is available in <code>docs</code> folder.</p>
+<h2 id="news-changelog">News &amp; Changelog</h2>
+<ul>
+<li>:hammer: Package is still under development</li>
+<li>2022.10 - Preprint published on ArXiv :tada:</li>
+<li>2022.09 - Redistributor v1.0 (complete rewrite)</li>
+<li>2021.10 - Redistributor v0.2 (generalization to arbitrary source &amp; target)</li>
+<li>2018.08 - Introducing Redistributor (generalization to arbitrary target)</li>
+<li>2018.07 - Introducing Gaussifier package (now deprecated)</li>
+</ul>
 <h2 id="how-to-cite">How to cite</h2>
-<p>&hellip;</p>
+<p>If you use Redistributor in your research, please cite the following paper:</p>
+<pre><code>@article{redistributor2022,
+  title={Redistributor: Transforming Empirical Data Distributions},
+  author={Harar, P. and Elbrächter, D. and Dörfler, M. and Johnson, K.},
+  eprinttype={ArXiv},
+  eprint={...}
+}
+</code></pre>
 <h2 id="license">License</h2>
 <p>This project is licensed under the terms of the MIT license.
 See <code>license.txt</code> for details.</p>
-<h2 id="acknowledgement">Acknowledgement</h2>
-<p>This work was supported by the <em>International Mobility of Researchers</em> (program call no.: <a href="https://opvvv.msmt.cz/vyzva/vyzva-c-02-16-027-mezinarodni-mobilita-vyzkumnych-pracovniku.htm">CZ.02.2.69/0.0/0.0/16027/0008371</a>).
-<img alt="opvvv" src="https://gitlab.com/paloha/redistributor/uploads/19903a1b9e00015faa2b61234a99b911/opvvv.jpg"></p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2905,13 +2855,15 @@ behaviour of <code>_check_bunds</code> to warn instead of raising an error.</p>
 <h1>Index</h1>
 <div class="toc">
 <ul>
+<li><a href="#redistributor">Redistributor</a><ul>
 <li><a href="#installation">Installation</a></li>
-<li><a href="#compatibility">Compatibility</a></li>
-<li><a href="#dependencies">Dependencies</a></li>
-<li><a href="#mathematical-description">Mathematical description</a></li>
+<li><a href="#quick-start">Quick-start</a></li>
+<li><a href="#documentation">Documentation</a></li>
+<li><a href="#news-changelog">News &amp; Changelog</a></li>
 <li><a href="#how-to-cite">How to cite</a></li>
 <li><a href="#license">License</a></li>
-<li><a href="#acknowledgement">Acknowledgement</a></li>
+</ul>
+</li>
 </ul>
 </div>
 <ul id="index">

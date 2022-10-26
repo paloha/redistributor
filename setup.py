@@ -14,7 +14,7 @@ setup(
     keywords='distribution transformation',
     project_urls={
         'Source': 'https://gitlab.com/paloha/redistributor',
-        'Documentation': 'todo add',
+        'Documentation': 'https://gitlab.com/paloha/redistributor/-/raw/master/docs/redistributor.pdf?inline=false',
         'Publication DOI': 'todo add doi',
         'Issue tracker': 'https://gitlab.com/paloha/redistributor/issues',
     },
