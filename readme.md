@@ -19,6 +19,11 @@ Install the latest version directly from the [repository](https://gitlab.com/pal
 pip install git+https://gitlab.com/paloha/redistributor
 ```
 
+In case you are looking for previous version of Redistributor, please install v0.2.1 from this commit. We are working on properly tagging commits with appropriate versions and publishing the package on Pypi. Stay tuned. 
+```
+pip install git+https://gitlab.com/paloha/redistributor.git@d8efea4d9d1e468ebd6555a825f4b169ea5ac8fc
+```
+
 ## Quick-start
 
 ```python
