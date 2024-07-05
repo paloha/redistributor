@@ -1,3 +1,54 @@
+
+# Package release manual
+1. Make a dev virtual environment:
+  ```bash
+  virtualenv .venvdev
+  source .venvdev/bin/activate
+  pip install .[dev]
+  pip install setuptools wheel twine build
+  ```
+2. Update `setup.py` with a current version number.
+3. Compile documentation following the Documentation manual below.
+```bash
+# Make sure to uninstall the package otherwise pdoc mismatches it
+pip uninstall redistributor
+```
+4. Test the code with automated tests:
+  ```bash
+  pytest tests.py
+  ```
+5. Make sure Pypi API tokens are in `~/.pypirc`
+```sml
+[pypi]
+  username = __token__
+  password = pypi-AgEIcHlwaS...
+```
+6. Build and upload to Pypi
+```bash
+python -m build
+```
+7. Optionally test the build by installing `.whl` directly
+```
+pip install dist/redistributor-<version>-py3-none-any.whl
+# And try to import it in REPL
+```
+8. Upload the build to Pypi:
+```
+twine upload dist/*
+```
+7. Commit and push to origin.
+8. Tag the commit with a version number:
+```bash
+git tag <tagname> -m "Tag message"
+git push origin <tag>
+```
+9. Remove the dev virtual environment and clean the project:
+```
+deactivate
+rm -r .venvdev
+rm -r dist __pycache__ redistributor.egg-info
+```
+
 # Documentation manual
 
 This is a manual which specifies how to compile the documentation into `html` and `pdf` formats. Instructions only for Ubuntu.

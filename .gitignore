@@ -1,8 +1,10 @@
 */__pycache__/
 /__pycache__/
 build/
+dist/
 redistributor.egg-info/
 .ipynb_checkpoints
 .venv
+.venvdev
 aux
 todo.md

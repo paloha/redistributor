@@ -11,17 +11,8 @@
 
 ## Installation
 
-<!-- ```bash
-pip install redistributor
-``` -->
-Install the latest version directly from the [repository](https://gitlab.com/paloha/redistributor):
 ```bash
-pip install git+https://gitlab.com/paloha/redistributor
-```
-
-In case you are looking for previous version of Redistributor, please install v0.2.1 from this commit. We are working on properly tagging commits with appropriate versions and publishing the package on Pypi. Stay tuned. 
-```
-pip install git+https://gitlab.com/paloha/redistributor.git@d8efea4d9d1e468ebd6555a825f4b169ea5ac8fc
+pip install redistributor
 ```
 
 ## Quick-start
@@ -36,7 +27,7 @@ target = norm(0, 1)  # In this example, target is set explicitly
 r = R(source=L(S), target=target)  # Estimate the transformation
 output = r.transform(S)  # Data now follows the target distribution
 ```
-More in `examples.ipynb`.
+More in `examples.ipynb`. Examples for image processing are in `examples-images.ipynb`.
 
 ## Documentation
 Documentation is available in `docs` folder.
@@ -45,6 +36,10 @@ Documentation is available in `docs` folder.
 ## News & Changelog
 
 * :hammer: Package is still under development
+* 2024.07 - [Preprint](https://arxiv.org/abs/2210.14219) on ArXiv updated with new results
+* 2024.07 - Package released on PyPi.org :tada:
+* 2024.07 - Repository mirrored to GitHub for easier access of the community
+* 2023.10 - Added code examples of image processing
 * 2022.10 - [Preprint](https://arxiv.org/abs/2210.14219) published on ArXiv :tada:
 * 2022.09 - Redistributor v1.0 (complete rewrite)
 * 2021.10 - Redistributor v0.2 (generalization to arbitrary source & target)
