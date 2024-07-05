@@ -39,7 +39,7 @@ twine upload dist/*
 7. Commit and push to origin.
 8. Tag the commit with a version number:
 ```bash
-git tag <tagname> -m "Tag message"
+git tag -m "Tag message" <tagname> # Tag e.g. v1.0.0
 git push origin <tag>
 ```
 9. Remove the dev virtual environment and clean the project:
